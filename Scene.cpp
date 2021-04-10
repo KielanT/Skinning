@@ -20,6 +20,8 @@
 
 #include "ColourRGBA.h" 
 
+#include "Light.h"
+
 #include <sstream>
 #include <memory>
 
@@ -62,13 +64,15 @@ Camera* gCamera;
 
 // Store lights in an array in this exercise
 const int NUM_LIGHTS = 5;
-struct Light
-{
-    Model*   model;
-    CVector3 colour;
-    float    strength;
-};
-Light gLights[NUM_LIGHTS]; 
+//struct Lights
+//{
+//    Model*   model;
+//    CVector3 colour;
+//    float    strength;
+//};
+//Lights gLights[NUM_LIGHTS]; 
+
+Light* gLight[NUM_LIGHTS];
 
 
 // Additional light information
@@ -78,11 +82,6 @@ float    gSpecularPower = 256; // Specular power controls shininess - same for a
 float gWiggle = 6.0f;
 
 ColourRGBA gBackgroundColor = { 0.2f, 0.2f, 0.3f, 1.0f };
-
-// Variables controlling light1's orbiting of the cube
-const float gLightOrbit = 20.0f;
-const float gLightOrbitSpeed = 0.7f;
-const float gLight3Strength = 30.0f;
 
 float gSpotlightConeAngle = 90.0f;
 
@@ -150,18 +149,6 @@ ID3D11ShaderResourceView* gSmokeDiffuseMapSRV = nullptr;
 
 ID3D11Resource*           gMoogleDiffuseMap = nullptr;
 ID3D11ShaderResourceView* gMoogleDiffuseMapSRV = nullptr;
-
-// Light Helper functions
-CMatrix4x4 CalculateLightViewMatrix(int lightIndex)
-{
-    return InverseAffine(gLights[lightIndex].model->WorldMatrix());
-}
-
-// Get "camera-like" projection matrix for a spotlight
-CMatrix4x4 CalculateLightProjectionMatrix(int lightIndex)
-{
-    return MakeProjectionMatrix(1.0f, ToRadians(gSpotlightConeAngle)); // Helper function in Utility\GraphicsHelpers.cpp
-}
 
 
 //--------------------------------------------------------------------------------------
@@ -340,33 +327,33 @@ bool InitScene()
     // Light set-up - using an array this time
     for (int i = 0; i < NUM_LIGHTS; ++i)
     {
-        gLights[i].model = new Model(gLightMesh);
+        gLight[i] = new Light();
     }
     
-    gLights[0].colour = { 0.8f, 0.8f, 1.0f };
-    gLights[0].strength = 10;
-    gLights[0].model->SetPosition({ 30, 10, 0 });
-    gLights[0].model->SetScale(pow(gLights[0].strength, 0.7f)); // Convert light strength into a nice value for the scale of the light - equation is ad-hoc.
+    gLight[0]->SetStrength(10);
+    gLight[0]->SetPosition({ 30, 10, 0 });
+    gLight[0]->SetType(1);
+    gLight[0]->SetEffect(1);
+
+    gLight[1]->SetLightColour({ 1.0f, 0.8f, 0.2f });
+    gLight[1]->SetStrength(10);
+    gLight[1]->SetPosition({ -10, 25, -30 });
+
+    gLight[2]->SetLightColour({ 1.0f, 0.0f, 0.0f });
+    gLight[2]->SetStrength(50);
+    gLight[2]->SetPosition({ -310, 10, 0 });
+    gLight[2]->SetEffect(2);
+
+
+    gLight[3]->SetLightColour({ 0.2f, 0.5f, 8.0f });
+    gLight[3]->SetStrength(40);
+    gLight[3]->SetPosition({ -310, 25, 30 });
+    gLight[3]->SetEffect(3);
     
-    gLights[1].colour = { 1.0f, 0.8f, 0.2f };
-    gLights[1].strength = 40;
-    gLights[1].model->SetPosition({ -10, 25, -30 });
-    gLights[1].model->SetScale(pow(gLights[1].strength, 0.7f));
-
-    gLights[2].colour = { 1.0f, 0.0f, 0.0f };
-    gLights[2].strength = gLight3Strength;
-    gLights[2].model->SetPosition({ -310, 10, 0 });
-    gLights[2].model->SetScale(pow(gLights[2].strength, 0.7f));
-
-    gLights[3].colour = { 0.2f, 0.5f, 8.0f };
-    gLights[3].strength = 30;
-    gLights[3].model->SetPosition({ -310, 25, 30 });
-    gLights[3].model->SetScale(pow(gLights[3].strength, 0.7f));
-
-    gLights[4].colour = { 0.75f, 0.75f, 0.75f };
-    gLights[4].strength = 40;
-    gLights[4].model->SetPosition({ -20, 40, -50 });
-    gLights[4].model->SetScale(pow(gLights[4].strength, 0.7f));
+    gLight[4]->SetLightColour({ 0.75f, 0.75f, 0.75f });
+    gLight[4]->SetStrength(40);
+    gLight[4]->SetPosition({ -20, 40, -50 });
+    gLight[4]->SetType(2);
 
     gTeapot->SetPosition({ -340, 0, 0 });
 
@@ -391,6 +378,7 @@ bool InitScene()
     gCamera = new Camera();
     gCamera->SetPosition({ 25, 12,-10 });
     gCamera->SetRotation({ ToRadians(13.0f), ToRadians(15.0f), 0.0f });
+
 
     return true;
 }
@@ -437,7 +425,7 @@ void ReleaseResources()
     // See note in InitGeometry about why we're not using unique_ptr and having to manually delete
     for (int i = 0; i < NUM_LIGHTS; ++i)
     {
-        delete gLights[i].model;  gLights[i].model = nullptr;
+        delete gLight[i];  gLight[i] = nullptr;
     }
     delete gCamera;                   gCamera             = nullptr;
     delete gGround;                   gGround             = nullptr;
@@ -468,43 +456,6 @@ void ReleaseResources()
 // Scene Rendering
 //--------------------------------------------------------------------------------------
 
-void RenderDepthBufferFromLight(int lightIndex)
-{
-    // Get camera-like matrices from the spotlight, seet in the constant buffer and send over to GPU
-    gPerFrameConstants.viewMatrix = CalculateLightViewMatrix(lightIndex);
-    gPerFrameConstants.projectionMatrix = CalculateLightProjectionMatrix(lightIndex);
-    gPerFrameConstants.viewProjectionMatrix = gPerFrameConstants.viewMatrix * gPerFrameConstants.projectionMatrix;
-    UpdateConstantBuffer(gPerFrameConstantBuffer, gPerFrameConstants);
-
-    // Indicate that the constant buffer we just updated is for use in the vertex shader (VS) and pixel shader (PS)
-    gD3DContext->VSSetConstantBuffers(0, 1, &gPerFrameConstantBuffer); // First parameter must match constant buffer number in the shader 
-    gD3DContext->PSSetConstantBuffers(0, 1, &gPerFrameConstantBuffer);
-
-
-    //// Only render models that cast shadows ////
-
-    // Use special depth-only rendering shaders
-    gD3DContext->VSSetShader(gBasicTransformVertexShader, nullptr, 0);
-    gD3DContext->PSSetShader(gDepthOnlyPixelShader, nullptr, 0);
-
-    // States - no blending, normal depth buffer and culling
-    gD3DContext->OMSetBlendState(gNoBlendingState, nullptr, 0xffffff);
-    gD3DContext->OMSetDepthStencilState(gUseDepthBufferState, 0);
-    gD3DContext->RSSetState(gCullFrontState);
-
-    // Render models - no state changes required between each object in this situation (no textures used in this step)
-    gGround->Render();
-    gCharacter->Render();
-    gCrate->Render();
-    gFloor->Render();
-    gTeapot->Render();
-    gSphere->Render();
-    gCube->Render();
-    gAdditiveCube->Render();
-    gMultiplicativeCube->Render();
-    gAlphaCube->Render();
-    gMoogleCube->Render();
-}
 
 // Render everything in the scene from the given camera
 void RenderSceneFromCamera(Camera* camera)
@@ -596,30 +547,15 @@ void RenderSceneFromCamera(Camera* camera)
     gMoogleCube->Render();
 
     //// Render lights ////
-
-    // Select which shaders to use next
-    gD3DContext->VSSetShader(gBasicTransformVertexShader, nullptr, 0);
-    gD3DContext->PSSetShader(gLightModelPixelShader,      nullptr, 0);
-
-    // Select the texture and sampler to use in the pixel shader
-    gD3DContext->PSSetShaderResources(0, 1, &gLightDiffuseMapSRV); // First parameter must match texture slot number in the shaer
-    gD3DContext->PSSetSamplers(0, 1, &gAnisotropic4xSampler);
-
-    // States - additive blending, read-only depth buffer and no culling (standard set-up for blending
-    gD3DContext->OMSetBlendState(gAdditiveBlendingState, nullptr, 0xffffff);
-    gD3DContext->OMSetDepthStencilState(gDepthReadOnlyState, 0);
-    gD3DContext->RSSetState(gCullNoneState);
-
     // Render all the lights in the array
     for (int i = 0; i < NUM_LIGHTS; ++i)
     {
-        gPerModelConstants.objectColour = gLights[i].colour; // Set any per-model constants apart from the world matrix just before calling render (light colour here)
-        gLights[i].model->Render();
+        gPerModelConstants.objectColour = gLight[i]->GetLightColour(); // Set any per-model constants apart from the world matrix just before calling render (light colour here)
+        gLight[i]->RenderLightFromCamera();
     }
+
+    
 }
-
-
-
 
 // Rendering the scene
 void RenderScene()
@@ -630,48 +566,48 @@ void RenderScene()
     // Don't send to the GPU yet, the function RenderSceneFromCamera will do that
 
     //Light 1 as spotlight
-    gPerFrameConstants.light1Colour   = gLights[0].colour * gLights[0].strength;
-    gPerFrameConstants.light1Position = gLights[0].model->Position();
-    gPerFrameConstants.light1Facing = Normalise(gLights[0].model->WorldMatrix().GetZAxis());
-    gPerFrameConstants.light1CosHalfAngle = cos(ToRadians(gSpotlightConeAngle / 2));
-    gPerFrameConstants.light1ViewMatrix = CalculateLightViewMatrix(0);
-    gPerFrameConstants.light1ProjectionMatrix = CalculateLightProjectionMatrix(0);
-    gPerFrameConstants.light1Type = 1;
+    gPerFrameConstants.light1Colour           = gLight[0]->GetLightColour();                                     
+    gPerFrameConstants.light1Position         = gLight[0]->GetLightPosition();                                 
+    gPerFrameConstants.light1Facing           = gLight[0]->GetLightFacing();                                     
+    gPerFrameConstants.light1CosHalfAngle     = gLight[0]->GetLightCosHalfAngle();                            
+    gPerFrameConstants.light1ViewMatrix       = gLight[0]->GetLightViewMatrix();                             
+    gPerFrameConstants.light1ProjectionMatrix = gLight[0]->GetLightProjectionMatrix();                 
+    gPerFrameConstants.light1Type             = gLight[0]->GetLightType();
 
 
-    gPerFrameConstants.light2Colour   = gLights[1].colour * gLights[1].strength;
-    gPerFrameConstants.light2Position = gLights[1].model->Position();
-    gPerFrameConstants.light2Facing = Normalise(gLights[1].model->WorldMatrix().GetZAxis());
-    gPerFrameConstants.light2CosHalfAngle = cos(ToRadians(gSpotlightConeAngle / 2));
-    gPerFrameConstants.light2ViewMatrix = CalculateLightViewMatrix(1);
-    gPerFrameConstants.light2ProjectionMatrix = CalculateLightProjectionMatrix(1);
-    gPerFrameConstants.light2Type = 0;
+    gPerFrameConstants.light2Colour            = gLight[1]->GetLightColour();            
+    gPerFrameConstants.light2Position          = gLight[1]->GetLightPosition();          
+    gPerFrameConstants.light2Facing            = gLight[1]->GetLightFacing();            
+    gPerFrameConstants.light2CosHalfAngle      = gLight[1]->GetLightCosHalfAngle();      
+    gPerFrameConstants.light2ViewMatrix        = gLight[1]->GetLightViewMatrix();        
+    gPerFrameConstants.light2ProjectionMatrix  = gLight[1]->GetLightProjectionMatrix();  
+    gPerFrameConstants.light2Type              = gLight[1]->GetLightType();
 
 
-    gPerFrameConstants.light3Colour   = gLights[2].colour * gLights[2].strength;
-    gPerFrameConstants.light3Position = gLights[2].model->Position();
-    gPerFrameConstants.light3Facing = Normalise(gLights[2].model->WorldMatrix().GetZAxis());
-    gPerFrameConstants.light3CosHalfAngle = cos(ToRadians(gSpotlightConeAngle / 2));
-    gPerFrameConstants.light3ViewMatrix = CalculateLightViewMatrix(2);
-    gPerFrameConstants.light3ProjectionMatrix = CalculateLightProjectionMatrix(2);
-    gPerFrameConstants.light3Type = 0;
+    gPerFrameConstants.light3Colour           = gLight[2]->GetLightColour();
+    gPerFrameConstants.light3Position         = gLight[2]->GetLightPosition();         
+    gPerFrameConstants.light3Facing           = gLight[2]->GetLightFacing();           
+    gPerFrameConstants.light3CosHalfAngle     = gLight[2]->GetLightCosHalfAngle();     
+    gPerFrameConstants.light3ViewMatrix       = gLight[2]->GetLightViewMatrix();       
+    gPerFrameConstants.light3ProjectionMatrix = gLight[2]->GetLightProjectionMatrix(); 
+    gPerFrameConstants.light3Type             = gLight[2]->GetLightType();
 
 
-    gPerFrameConstants.light4Colour   = gLights[3].colour * gLights[3].strength;
-    gPerFrameConstants.light4Position = gLights[3].model->Position();
-    gPerFrameConstants.light4Facing = Normalise(gLights[3].model->WorldMatrix().GetZAxis());
-    gPerFrameConstants.light4CosHalfAngle = cos(ToRadians(gSpotlightConeAngle / 2));
-    gPerFrameConstants.light4ViewMatrix = CalculateLightViewMatrix(3);
-    gPerFrameConstants.light4ProjectionMatrix = CalculateLightProjectionMatrix(3);
-    gPerFrameConstants.light4Type = 0;
+    gPerFrameConstants.light4Colour           = gLight[3]->GetLightColour();
+    gPerFrameConstants.light4Position         = gLight[3]->GetLightPosition();        
+    gPerFrameConstants.light4Facing           = gLight[3]->GetLightFacing();          
+    gPerFrameConstants.light4CosHalfAngle     = gLight[3]->GetLightCosHalfAngle();    
+    gPerFrameConstants.light4ViewMatrix       = gLight[3]->GetLightViewMatrix();      
+    gPerFrameConstants.light4ProjectionMatrix = gLight[3]->GetLightProjectionMatrix();
+    gPerFrameConstants.light4Type             = gLight[3]->GetLightType();
 
-    gPerFrameConstants.light4Colour = gLights[4].colour * gLights[4].strength;
-    gPerFrameConstants.light4Position = gLights[4].model->Position();
-    gPerFrameConstants.light4Facing = Normalise(gLights[4].model->WorldMatrix().GetZAxis());
-    gPerFrameConstants.light4CosHalfAngle = cos(ToRadians(gSpotlightConeAngle / 2));
-    gPerFrameConstants.light4ViewMatrix = CalculateLightViewMatrix(4);
-    gPerFrameConstants.light4ProjectionMatrix = CalculateLightProjectionMatrix(4);
-    gPerFrameConstants.light4Type = 2;
+    gPerFrameConstants.light5Colour           = gLight[4]->GetLightColour();          
+    gPerFrameConstants.light5Position         = gLight[4]->GetLightPosition();        
+    gPerFrameConstants.light5Facing           = gLight[4]->GetLightFacing();          
+    gPerFrameConstants.light5CosHalfAngle     = gLight[4]->GetLightCosHalfAngle();    
+    gPerFrameConstants.light5ViewMatrix       = gLight[4]->GetLightViewMatrix();      
+    gPerFrameConstants.light5ProjectionMatrix = gLight[4]->GetLightProjectionMatrix();
+    gPerFrameConstants.light5Type             = gLight[4]->GetLightType();
 
     gPerFrameConstants.ambientColour  = gAmbientColour;
     gPerFrameConstants.specularPower  = gSpecularPower;
@@ -694,12 +630,11 @@ void RenderScene()
     gD3DContext->ClearDepthStencilView(gShadowMap1DepthStencil, D3D11_CLEAR_DEPTH, 1.0f, 0);
 
     // Render the scene from the point of view of light 1 (only depth values written)
-    RenderDepthBufferFromLight(0);
-    RenderDepthBufferFromLight(1);
-    RenderDepthBufferFromLight(2);
-    RenderDepthBufferFromLight(3);
-    RenderDepthBufferFromLight(4);
 
+    for (int i = 0; i < NUM_LIGHTS; ++i)
+    {
+        gLight[i]->RenderDepthBufferFromLight();
+    }
     //// Main scene rendering ////
 
     // Set the back buffer as the target for rendering and select the main depth buffer.
@@ -742,7 +677,6 @@ void RenderScene()
 //--------------------------------------------------------------------------------------
 // Scene Update
 //--------------------------------------------------------------------------------------
-void LightControl(float frameTime);
 
 // Update models and camera. frameTime is the time passed since the last frame
 void UpdateScene(float frameTime)
@@ -756,10 +690,12 @@ void UpdateScene(float frameTime)
 	gCharacter->Control(6,  frameTime, Key_0, Key_0, Key_0, Key_0, Key_0, Key_0, Key_Z, Key_0); // Right Lower Arm
 	gCharacter->Control(20, frameTime, Key_0, Key_0, Key_0, Key_0, Key_0, Key_0, Key_Z, Key_0); // Left Lower Arm
 
-    LightControl(frameTime);
-
     gPerFrameConstants.wiggle += sin(gWiggle * 6);
 
+    for (int i = 0; i < NUM_LIGHTS; ++i)
+    {
+        gLight[i]->UpdateScene(frameTime, gCharacter);
+    }
 
 	// Control camera (will update its view matrix)
 	gCamera->Control(frameTime, Key_Up, Key_Down, Key_Left, Key_Right, Key_W, Key_S, Key_A, Key_D );
@@ -786,57 +722,4 @@ void UpdateScene(float frameTime)
         totalFrameTime = 0;
         frameCount = 0;
     }
-}
-
-
-void LightControl(float frameTime)
-{
-    /**** Light 1 ****/
-    // Orbit the light - a bit of a cheat with the static variable [ask the tutor if you want to know what this is]
-    static float rotate = 0.0f;
-    static bool go = true;
-    gLights[0].model->SetPosition(gCharacter->Position() + CVector3{ cos(rotate) * gLightOrbit, 10, sin(rotate) * gLightOrbit });
-    if (go)  rotate -= gLightOrbitSpeed * frameTime;
-    if (KeyHit(Key_1))  go = !go;
-
-    /**** Light 3 ****/
-    if (gLights[2].strength >= 0.0f && gLights[2].strength <= gLight3Strength)
-    {
-        gLights[2].strength -= 15.0f * frameTime;
-    }
-    else
-    {
-        gLights[2].strength = gLight3Strength;
-    }
-
-    /**** Light 4 ****/
-   if (gLights[3].colour.z >= 0 && gLights[3].colour.z <= 1)
-   {
-       float random = static_cast <float> (rand()) / static_cast <float> (RAND_MAX); // Gets a random number between 0 and 1
-       gLights[3].colour.z += random * frameTime;
-   }
-   else
-   {
-       gLights[3].colour.z = 0;
-   }
-   
-   if (gLights[3].colour.y >= 0 && gLights[3].colour.y <= 1)
-   {
-       float random = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
-       gLights[3].colour.y += random * frameTime;
-   }
-   else
-   {
-       gLights[3].colour.y = 0;
-   }
-   
-   if (gLights[3].colour.x >= 0 && gLights[3].colour.x <= 1)
-   {
-       float random = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
-       gLights[3].colour.x += random * frameTime;
-   }
-   else
-   {
-       gLights[3].colour.x = 0;
-   }
 }
