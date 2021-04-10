@@ -1,0 +1,39 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project>
+  <ProjectOutputs>
+    <ProjectOutput>
+      <FullPath>D:\Documents\UCLan Year Two\Graphics\Assignment\Skinning\Skinning.exe</FullPath>
+    </ProjectOutput>
+  </ProjectOutputs>
+  <ContentFiles>
+    <ContentFile>
+      <FullPath>D:\Documents\UCLan Year Two\Graphics\Assignment\Skinning\DepthOnly_ps.cso</FullPath>
+    </ContentFile>
+    <ContentFile>
+      <FullPath>D:\Documents\UCLan Year Two\Graphics\Assignment\Skinning\LightModel_ps.cso</FullPath>
+    </ContentFile>
+    <ContentFile>
+      <FullPath>D:\Documents\UCLan Year Two\Graphics\Assignment\Skinning\BasicTransform_vs.cso</FullPath>
+    </ContentFile>
+    <ContentFile>
+      <FullPath>D:\Documents\UCLan Year Two\Graphics\Assignment\Skinning\PixelLighting_ps.cso</FullPath>
+    </ContentFile>
+    <ContentFile>
+      <FullPath>D:\Documents\UCLan Year Two\Graphics\Assignment\Skinning\PixelLighting_vs.cso</FullPath>
+    </ContentFile>
+    <ContentFile>
+      <FullPath>D:\Documents\UCLan Year Two\Graphics\Assignment\Skinning\Skinning_vs.cso</FullPath>
+    </ContentFile>
+    <ContentFile>
+      <FullPath>D:\Documents\UCLan Year Two\Graphics\Assignment\Skinning\TextureAlpha_ps.cso</FullPath>
+    </ContentFile>
+    <ContentFile>
+      <FullPath>D:\Documents\UCLan Year Two\Graphics\Assignment\Skinning\TextureFade_ps.cso</FullPath>
+    </ContentFile>
+    <ContentFile>
+      <FullPath>D:\Documents\UCLan Year Two\Graphics\Assignment\Skinning\WiggleShader_vs.cso</FullPath>
+    </ContentFile>
+  </ContentFiles>
+  <SatelliteDlls />
+  <NonRecipeFileRefs />
+</Project>
