@@ -21,6 +21,7 @@
 #include "ColourRGBA.h" 
 
 #include "Light.h"
+#include "CModel.h"
 
 #include <sstream>
 #include <memory>
@@ -61,6 +62,7 @@ Model* gMoogleCube;
 
 Camera* gCamera;
 
+CModel* Character;
 
 // Store lights in an array in this exercise
 const int NUM_LIGHTS = 5;
@@ -300,6 +302,9 @@ bool InitScene()
     gAlphaCube          = new Model(gCubeMesh);
     gMoogleCube         = new Model(gCubeMesh);
 
+    Character = new CModel();
+    
+
 	// Initial positions
 	//gCharacter->SetPosition({ 25, 0.5, 10 });
     //gCharacter->SetScale(0.06f);
@@ -481,13 +486,20 @@ void RenderSceneFromCamera(Camera* camera)
     gD3DContext->OMSetBlendState(gNoBlendingState, nullptr, 0xffffff);
     gD3DContext->OMSetDepthStencilState(gUseDepthBufferState, 0);
     gD3DContext->RSSetState(gCullBackState);
-
+    
     // Select the approriate textures and sampler to use in the pixel shader
     gD3DContext->PSSetShaderResources(0, 1, &gCharacterDiffuseSpecularMapSRV); // First parameter must match texture slot number in the shader
     gD3DContext->PSSetSamplers(0, 1, &gAnisotropic4xSampler);
 
     gCharacter->Render();
 
+    //CModel* Character = new CModel();
+    //Character->Render();
+    //Character->SetMesh("Man.x");
+    //Character->SetShaders(gSkinningVertexShader, gPixelLightingPixelShader);
+    //Character->SetTexture("ManDiffuseSpecular.dds");
+    //Character->Render();
+    Character->Render();
 
     //// Render non-skinned models ////
 
@@ -496,15 +508,15 @@ void RenderSceneFromCamera(Camera* camera)
     
 
     // Render lit models, only change textures for each onee
-    gD3DContext->PSSetShaderResources(0, 1, &gGroundDiffuseSpecularMapSRV); // First parameter must match texture slot number in the shader
-    gGround->Render();
-    
-
-    gD3DContext->PSSetShaderResources(0, 1, &gCrateDiffuseSpecularMapSRV);
-    gCrate->Render();
-
-    gD3DContext->PSSetShaderResources(0, 1, &gFloorDiffuseMapSRV);
-    gFloor->Render();
+    //gD3DContext->PSSetShaderResources(0, 1, &gGroundDiffuseSpecularMapSRV); // First parameter must match texture slot number in the shader
+    //gGround->Render();
+    //
+    //
+    //gD3DContext->PSSetShaderResources(0, 1, &gCrateDiffuseSpecularMapSRV);
+    //gCrate->Render();
+    //
+    //gD3DContext->PSSetShaderResources(0, 1, &gFloorDiffuseMapSRV);
+    //gFloor->Render();
 
     gD3DContext->PSSetShaderResources(0, 1, &gTeapotDiffuseMapSRV);
     gTeapot->Render();
@@ -545,6 +557,8 @@ void RenderSceneFromCamera(Camera* camera)
 
     gD3DContext->PSSetShaderResources(0, 1, &gMoogleDiffuseMapSRV);
     gMoogleCube->Render();
+
+
 
     //// Render lights ////
     // Render all the lights in the array
