@@ -28,6 +28,7 @@
       <Filter>Utility</Filter>
     </ClCompile>
     <ClCompile Include="Light.cpp" />
+    <ClCompile Include="CModel.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Common.h" />
@@ -63,6 +64,7 @@
       <Filter>Utility</Filter>
     </ClInclude>
     <ClInclude Include="Light.h" />
+    <ClInclude Include="CModel.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Utility">

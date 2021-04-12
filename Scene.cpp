@@ -21,6 +21,7 @@
 #include "ColourRGBA.h" 
 
 #include "Light.h"
+#include "CModel.h"
 
 #include <sstream>
 #include <memory>
@@ -61,6 +62,7 @@ Model* gMoogleCube;
 
 Camera* gCamera;
 
+CModel* TestModel;
 
 // Store lights in an array in this exercise
 const int NUM_LIGHTS = 5;
@@ -170,6 +172,7 @@ bool InitGeometry()
         gTeapotMesh    = new Mesh("Teapot.x");
         gSphereMesh    = new Mesh("Sphere.x");
         gCubeMesh      = new Mesh("Cube.x");
+        TestModel = new CModel("Cube.x");
     }
     catch (std::runtime_error e)  // Constructors cannot return error messages so use exceptions to catch mesh errors (fairly standard approach this)
     {
@@ -318,6 +321,10 @@ bool InitScene()
     gCharacter->SetRotation({ ToRadians(0), ToRadians(-50), ToRadians(70) }, 7); // Right Hand
     gCharacter->SetRotation({ ToRadians(-90), ToRadians(0), ToRadians(0) }, 19); // Left Upper Arm
 
+
+    TestModel->SetMesh("Man.x");
+    TestModel->SetScale(0.06f);
+
 	gCrate->SetPosition({ 45, 0, 45 });
 	gCrate->SetScale( 6.0f );
 	gCrate->SetRotation({ 0.0f, ToRadians(-50.0f), 0.0f });
@@ -336,7 +343,7 @@ bool InitScene()
     gLight[0]->SetEffect(1);
 
     gLight[1]->SetLightColour({ 1.0f, 0.8f, 0.2f });
-    gLight[1]->SetStrength(10);
+    gLight[1]->SetStrength(60);
     gLight[1]->SetPosition({ -10, 25, -30 });
 
     gLight[2]->SetLightColour({ 1.0f, 0.0f, 0.0f });
@@ -370,7 +377,7 @@ bool InitScene()
 
     gMoogleCube->SetPosition({ -320, 10, 140 });
 
-
+    
 
     srand(static_cast <unsigned> (time(0))); // Used for seeding the random number generator
     //// Set up camera ////
@@ -487,7 +494,7 @@ void RenderSceneFromCamera(Camera* camera)
     gD3DContext->PSSetSamplers(0, 1, &gAnisotropic4xSampler);
 
     gCharacter->Render();
-
+    TestModel->Render();
 
     //// Render non-skinned models ////
 
@@ -508,6 +515,8 @@ void RenderSceneFromCamera(Camera* camera)
 
     gD3DContext->PSSetShaderResources(0, 1, &gTeapotDiffuseMapSRV);
     gTeapot->Render();
+
+    
 
     gD3DContext->PSSetShader(gTextureFadePixelShader, nullptr, 0);
     gD3DContext->PSSetShaderResources(0, 1, &gFadeOneDiffuseMapSRV);
@@ -553,8 +562,6 @@ void RenderSceneFromCamera(Camera* camera)
         gPerModelConstants.objectColour = gLight[i]->GetLightColour(); // Set any per-model constants apart from the world matrix just before calling render (light colour here)
         gLight[i]->RenderLightFromCamera();
     }
-
-    
 }
 
 // Rendering the scene
