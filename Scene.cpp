@@ -39,43 +39,25 @@ const float MOVEMENT_SPEED = 50.0f; // 50 units per second for movement (what a 
 
 
 // Meshes, models and cameras, same meaning as TL-Engine. Meshes prepared in InitGeometry function, Models & camera in InitScene
-Mesh* gCharacterMesh;
-Mesh* gCrateMesh;
-Mesh* gGroundMesh;
-Mesh* gLightMesh;
-Mesh* gFloorMesh;
-Mesh* gTeapotMesh;
-Mesh* gSphereMesh;
-Mesh* gCubeMesh;
-
-Model* gCharacter;
-Model* gCrate;
-Model* gGround;
-Model* gFloor;
-Model* gTeapot;
-Model* gSphere;
-Model* gCube;
-Model* gAdditiveCube;
-Model* gMultiplicativeCube;
-Model* gAlphaCube;
-Model* gMoogleCube;
 
 Camera* gCamera;
 
-CModel* TestModel;
+const int NUM_CHARACTERS = 1;
+const int NUM_CUBES = 5;
+
+CModel* gCharacters[NUM_CHARACTERS];
+CModel* gCubes[NUM_CUBES];
+
+CModel* gCrate;
+CModel* gGround;
+CModel* gFloor;
+CModel* gTeapot;
+CModel* gSphere;
+
 
 // Store lights in an array in this exercise
 const int NUM_LIGHTS = 5;
-//struct Lights
-//{
-//    Model*   model;
-//    CVector3 colour;
-//    float    strength;
-//};
-//Lights gLights[NUM_LIGHTS]; 
-
 Light* gLight[NUM_LIGHTS];
-
 
 // Additional light information
 CVector3 gAmbientColour = { 0.2f, 0.2f, 0.3f }; // Background level of light (slightly bluish to match the far background, which is dark blue)
@@ -122,36 +104,11 @@ ID3D11Buffer*     gPerModelConstantBuffer; // --"--
 ID3D11Resource*           gCharacterDiffuseSpecularMap    = nullptr; // This object represents the memory used by the texture on the GPU
 ID3D11ShaderResourceView* gCharacterDiffuseSpecularMapSRV = nullptr; // This object is used to give shaders access to the texture above (SRV = shader resource view)
 
-ID3D11Resource*           gCrateDiffuseSpecularMap    = nullptr;
-ID3D11ShaderResourceView* gCrateDiffuseSpecularMapSRV = nullptr;
-
-ID3D11Resource*           gGroundDiffuseSpecularMap    = nullptr;
-ID3D11ShaderResourceView* gGroundDiffuseSpecularMapSRV = nullptr;
-
-ID3D11Resource*           gLightDiffuseMap    = nullptr;
-ID3D11ShaderResourceView* gLightDiffuseMapSRV = nullptr;
-
-ID3D11Resource*           gFloorDiffuseMap = nullptr;
-ID3D11ShaderResourceView* gFloorDiffuseMapSRV = nullptr;
-
-ID3D11Resource*           gTeapotDiffuseMap = nullptr;
-ID3D11ShaderResourceView* gTeapotDiffuseMapSRV = nullptr;
-
 ID3D11Resource*           gFadeOneDiffuseMap = nullptr;
 ID3D11ShaderResourceView* gFadeOneDiffuseMapSRV = nullptr;
 
 ID3D11Resource*           gFadeTwoDiffuseMap = nullptr;
 ID3D11ShaderResourceView* gFadeTwoDiffuseMapSRV = nullptr;
-
-ID3D11Resource*           gGlassDiffuseMap = nullptr;
-ID3D11ShaderResourceView* gGlassDiffuseMapSRV = nullptr;
-
-ID3D11Resource*           gSmokeDiffuseMap = nullptr;
-ID3D11ShaderResourceView* gSmokeDiffuseMapSRV = nullptr;
-
-ID3D11Resource*           gMoogleDiffuseMap = nullptr;
-ID3D11ShaderResourceView* gMoogleDiffuseMapSRV = nullptr;
-
 
 //--------------------------------------------------------------------------------------
 // Initialise scene geometry, constant buffers and states
@@ -164,15 +121,7 @@ bool InitGeometry()
     // Load mesh geometry data, just like TL-Engine this doesn't create anything in the scene. Create a Model for that.
     try 
     {
-        gCharacterMesh = new Mesh("Man.x");
-        gCrateMesh     = new Mesh("CargoContainer.x");
-        gGroundMesh    = new Mesh("Hills.x");
-        gLightMesh     = new Mesh("Light.x");
-        gFloorMesh     = new Mesh("Floor.x");
-        gTeapotMesh    = new Mesh("Teapot.x");
-        gSphereMesh    = new Mesh("Sphere.x");
-        gCubeMesh      = new Mesh("Cube.x");
-        TestModel = new CModel("Cube.x");
+        
     }
     catch (std::runtime_error e)  // Constructors cannot return error messages so use exceptions to catch mesh errors (fairly standard approach this)
     {
@@ -208,16 +157,8 @@ bool InitGeometry()
     // texture and also a ID3D11ShaderResourceView* (e.g. &gCubeDiffuseMapSRV), which allows us to use the texture in shaders
     // The function will fill in these pointers with usable data. The variables used here are globals found near the top of the file.
     if (!LoadTexture("ManDiffuseSpecular.dds",   &gCharacterDiffuseSpecularMap, &gCharacterDiffuseSpecularMapSRV) ||
-        !LoadTexture("CargoA.dds",               &gCrateDiffuseSpecularMap,     &gCrateDiffuseSpecularMapSRV    ) ||
-        !LoadTexture("GrassDiffuseSpecular.dds", &gGroundDiffuseSpecularMap,    &gGroundDiffuseSpecularMapSRV   ) ||
-        !LoadTexture("Flare.jpg",                &gLightDiffuseMap,             &gLightDiffuseMapSRV            ) ||
-        !LoadTexture("Wood2.jpg",                &gFloorDiffuseMap,             &gFloorDiffuseMapSRV            ) ||
         !LoadTexture("tech02.jpg",               &gFadeOneDiffuseMap,           &gFadeOneDiffuseMapSRV          ) ||
-        !LoadTexture("Wood2.jpg",                &gFadeTwoDiffuseMap,           &gFadeTwoDiffuseMapSRV          ) ||
-        !LoadTexture("Glass.jpg",                &gGlassDiffuseMap,             &gGlassDiffuseMapSRV            ) ||
-        !LoadTexture("Smoke.png",                &gSmokeDiffuseMap,             &gSmokeDiffuseMapSRV            ) ||
-        !LoadTexture("Moogle.png",               &gMoogleDiffuseMap,            &gMoogleDiffuseMapSRV           ) ||
-        !LoadTexture("tech02.jpg",               &gTeapotDiffuseMap,            &gTeapotDiffuseMapSRV))
+        !LoadTexture("Wood2.jpg",                &gFadeTwoDiffuseMap,           &gFadeTwoDiffuseMapSRV          ))
     {
         gLastError = "Error loading textures";
         return false;
@@ -286,50 +227,77 @@ bool InitGeometry()
 
 // Prepare the scene
 // Returns true on success
-
 bool InitScene()
 {
     //// Set up scene ////
+    for (int i = 0; i < NUM_CHARACTERS; ++i)
+    {
+        gCharacters[i] = new CModel("ManDiffuseSpecular.dds");
+        gCharacters[i]->SetMesh("Man.x");
+        gCharacters[i]->SetScale(0.06f);
+        gCharacters[i]->SetName("Character" + i);
+    }
+    gCharacters[0]->SetPosition({ 45, 16, 45 });
+    gCharacters[0]->SetRotation({ ToRadians(0.0f), ToRadians(220.0f), ToRadians(90.0f) });
+    gCharacters[0]->SetRotation({ ToRadians(0), ToRadians(-90), ToRadians(90) }, 6); // Right Lower Arm
+    gCharacters[0]->SetRotation({ ToRadians(0), ToRadians(0), ToRadians(30) }, 5); // Right Upper Arm
+    gCharacters[0]->SetRotation({ ToRadians(0), ToRadians(5), ToRadians(0) }, 40); // Right Upper Leg
+    gCharacters[0]->SetRotation({ ToRadians(107374176.), ToRadians(-185), ToRadians(0) }, 36); // Right Lower Leg
+    gCharacters[0]->SetRotation({ ToRadians(0), ToRadians(30), ToRadians(0) }, 3);  // Upper Torso
+    gCharacters[0]->SetRotation({ ToRadians(0), ToRadians(-50), ToRadians(70) }, 7); // Right Hand
+    gCharacters[0]->SetRotation({ ToRadians(-90), ToRadians(0), ToRadians(0) }, 19); // Left Upper Arm
 
-    gCharacter          = new Model(gCharacterMesh);
-    gCrate              = new Model(gCrateMesh);
-    gGround             = new Model(gGroundMesh);
-    gFloor              = new Model(gFloorMesh);
-    gTeapot             = new Model(gTeapotMesh);
-    gSphere             = new Model(gSphereMesh);
-    gCube               = new Model(gCubeMesh);
-    gAdditiveCube       = new Model(gCubeMesh);
-    gMultiplicativeCube = new Model(gCubeMesh);
-    gAlphaCube          = new Model(gCubeMesh);
-    gMoogleCube         = new Model(gCubeMesh);
+    gGround = new CModel("GrassDiffuseSpecular.dds");
+    gGround->SetMesh("Hills.x");
+	
+    gCrate = new CModel("CargoA.dds");
+    gCrate->SetMesh("CargoContainer.x");
+    gCrate->SetPosition({ 45, 0, 45 });
+    gCrate->SetScale(6.0f);
+    gCrate->SetRotation({ 0.0f, ToRadians(-50.0f), 0.0f });
 
-	// Initial positions
-	//gCharacter->SetPosition({ 25, 0.5, 10 });
-    //gCharacter->SetScale(0.06f);
-    //gCharacter->SetRotation({ 0.0f, ToRadians(140.0f), 0.0f });
-
-    // Position and rotate whole character
-    gCharacter->SetPosition({ 45, 16, 45 });
-    gCharacter->SetRotation({ ToRadians(0.0f), ToRadians(220.0f), ToRadians(90.0f) });
-    gCharacter->SetScale(0.06f);
-
-    gCharacter->SetRotation({ ToRadians(0), ToRadians(-90), ToRadians(90) }, 6); // Right Lower Arm
-    gCharacter->SetRotation({ ToRadians(0), ToRadians(0), ToRadians(30) }, 5); // Right Upper Arm
-    gCharacter->SetRotation({ ToRadians(0), ToRadians(5), ToRadians(0) }, 40); // Right Upper Leg
-    gCharacter->SetRotation({ ToRadians(107374176.), ToRadians(-185), ToRadians(0) }, 36); // Right Lower Leg
-    gCharacter->SetRotation({ ToRadians(0), ToRadians(30), ToRadians(0) }, 3);  // Upper Torso
-    gCharacter->SetRotation({ ToRadians(0), ToRadians(-50), ToRadians(70) }, 7); // Right Hand
-    gCharacter->SetRotation({ ToRadians(-90), ToRadians(0), ToRadians(0) }, 19); // Left Upper Arm
-
-
-    TestModel->SetMesh("Man.x");
-    TestModel->SetScale(0.06f);
-
-	gCrate->SetPosition({ 45, 0, 45 });
-	gCrate->SetScale( 6.0f );
-	gCrate->SetRotation({ 0.0f, ToRadians(-50.0f), 0.0f });
-
+    gFloor = new CModel("Wood2.jpg");
+    gFloor->SetMesh("Floor.x");
     gFloor->SetPosition({ -300, 0, 0 });
+
+    gTeapot = new CModel("tech02.jpg");
+    gTeapot->SetMesh("Teapot.x");
+    gTeapot->SetPosition({ -340, 0, 0 });
+
+    gSphere = new CModel("tech02.jpg");
+    gSphere->SetMesh("Sphere.x");
+    gSphere->SetPosition({ -300, 10, 30 });
+    gSphere->SetScale(.5f);
+
+    for (int i = 0; i < NUM_CUBES; ++i)
+    {
+        gCubes[i] = new CModel();
+    }
+
+    std::vector<std::string> cubeTextures;
+    cubeTextures.push_back("Wood2.jpg");
+    cubeTextures.push_back("Flare.jpg"); // For some reason it skips over the second one so it needs to have three textures
+    cubeTextures.push_back("tech02.jpg");
+    gCubes[0]->SetTexture(cubeTextures);
+    gCubes[0]->SetPosition({ -320, 10, 60 });
+    gCubes[0]->SetName("Cube");
+
+    gCubes[1]->SetTexture("Flare.jpg");
+    gCubes[1]->SetPosition({ -320, 10, 80 });
+    gCubes[1]->SetName("Additive Cube");
+
+    gCubes[2]->SetTexture("Glass.jpg");
+    gCubes[2]->SetPosition({ -320, 10, 100 });
+    gCubes[2]->SetName("Multiplicative Cube");
+
+    gCubes[3]->SetTexture("Smoke.png");
+    gCubes[3]->SetPosition({ -320, 10, 120 });
+    gCubes[3]->SetName("Alpha Cube");
+
+    gCubes[4]->SetTexture("Moogle.png");
+    gCubes[4]->SetPosition({ -320, 10, 140 });
+    gCubes[4]->SetName("Moogle Cube");
+
 
     // Light set-up - using an array this time
     for (int i = 0; i < NUM_LIGHTS; ++i)
@@ -351,7 +319,6 @@ bool InitScene()
     gLight[2]->SetPosition({ -310, 10, 0 });
     gLight[2]->SetEffect(2);
 
-
     gLight[3]->SetLightColour({ 0.2f, 0.5f, 8.0f });
     gLight[3]->SetStrength(40);
     gLight[3]->SetPosition({ -310, 25, 30 });
@@ -362,30 +329,12 @@ bool InitScene()
     gLight[4]->SetPosition({ -20, 40, -50 });
     gLight[4]->SetType(2);
 
-    gTeapot->SetPosition({ -340, 0, 0 });
-
-    gSphere->SetPosition({ -300, 10, 30 });
-    gSphere->SetScale(.5f);
-
-    gCube->SetPosition({ -320, 10, 60 });
-
-    gAdditiveCube->SetPosition({ -320, 10, 80 });
-
-    gMultiplicativeCube->SetPosition({ -320, 10, 100 });
-
-    gAlphaCube->SetPosition({ -320, 10, 120 });
-
-    gMoogleCube->SetPosition({ -320, 10, 140 });
-
-    
-
     srand(static_cast <unsigned> (time(0))); // Used for seeding the random number generator
     //// Set up camera ////
 
     gCamera = new Camera();
     gCamera->SetPosition({ 25, 12,-10 });
     gCamera->SetRotation({ ToRadians(13.0f), ToRadians(15.0f), 0.0f });
-
 
     return true;
 }
@@ -400,29 +349,12 @@ void ReleaseResources()
     if (gShadowMap1SRV)           gShadowMap1SRV->Release();
     if (gShadowMap1Texture)       gShadowMap1Texture->Release();
 
-    if (gLightDiffuseMapSRV)             gLightDiffuseMapSRV->Release();
-    if (gLightDiffuseMap)                gLightDiffuseMap->Release();
-    if (gGroundDiffuseSpecularMapSRV)    gGroundDiffuseSpecularMapSRV->Release();
-    if (gGroundDiffuseSpecularMap)       gGroundDiffuseSpecularMap->Release();
-    if (gCrateDiffuseSpecularMapSRV)     gCrateDiffuseSpecularMapSRV->Release();
-    if (gCrateDiffuseSpecularMap)        gCrateDiffuseSpecularMap->Release();
     if (gCharacterDiffuseSpecularMapSRV) gCharacterDiffuseSpecularMapSRV->Release();
     if (gCharacterDiffuseSpecularMap)    gCharacterDiffuseSpecularMap->Release();
-    if (gFloorDiffuseMapSRV)             gFloorDiffuseMapSRV->Release();
-    if (gFloorDiffuseMap)                gFloorDiffuseMap->Release();
-    if (gTeapotDiffuseMapSRV)            gTeapotDiffuseMapSRV->Release();
-    if (gTeapotDiffuseMap)               gTeapotDiffuseMap->Release();
     if (gFadeOneDiffuseMap)              gFadeOneDiffuseMap->Release();
     if (gFadeOneDiffuseMapSRV)           gFadeOneDiffuseMapSRV->Release();
     if (gFadeTwoDiffuseMap)              gFadeTwoDiffuseMap->Release();
     if (gFadeTwoDiffuseMapSRV)           gFadeTwoDiffuseMapSRV->Release();
-    if (gGlassDiffuseMap)                gGlassDiffuseMap->Release();
-    if (gGlassDiffuseMapSRV)             gGlassDiffuseMapSRV->Release();
-    if (gSmokeDiffuseMap)                gSmokeDiffuseMap->Release();
-    if (gSmokeDiffuseMapSRV)             gSmokeDiffuseMapSRV->Release();
-    if (gMoogleDiffuseMap)               gMoogleDiffuseMap->Release();
-    if (gMoogleDiffuseMapSRV)            gMoogleDiffuseMapSRV->Release();
-
 
     if (gPerModelConstantBuffer)  gPerModelConstantBuffer->Release();
     if (gPerFrameConstantBuffer)  gPerFrameConstantBuffer->Release();
@@ -435,26 +367,6 @@ void ReleaseResources()
         delete gLight[i];  gLight[i] = nullptr;
     }
     delete gCamera;                   gCamera             = nullptr;
-    delete gGround;                   gGround             = nullptr;
-    delete gCrate;                    gCrate              = nullptr;
-    delete gCharacter;                gCharacter          = nullptr;
-    delete gFloor;                    gFloor              = nullptr;
-    delete gTeapot;                   gTeapot             = nullptr;
-    delete gSphere;                   gSphere             = nullptr;
-    delete gCube;                     gCube               = nullptr;
-    delete gAdditiveCube;             gAdditiveCube       = nullptr;
-    delete gMultiplicativeCube;       gMultiplicativeCube = nullptr;
-    delete gAlphaCube;                gAlphaCube          = nullptr;
-    delete gMoogleCube;               gMoogleCube         = nullptr;
-
-    delete gLightMesh;      gLightMesh     = nullptr;
-    delete gGroundMesh;     gGroundMesh    = nullptr;
-    delete gCrateMesh;      gCrateMesh     = nullptr;
-    delete gCharacterMesh;  gCharacterMesh = nullptr;
-    delete gFloorMesh;      gFloorMesh     = nullptr;
-    delete gTeapotMesh;     gTeapotMesh    = nullptr;
-    delete gSphereMesh;     gSphereMesh    = nullptr;
-    delete gCubeMesh;       gCubeMesh      = nullptr;
 }
 
 
@@ -479,81 +391,53 @@ void RenderSceneFromCamera(Camera* camera)
 
 
     //// Render skinned models ////
-
-    // Select which shaders to use next
-    gD3DContext->VSSetShader(gSkinningVertexShader,     nullptr, 0);
-    gD3DContext->PSSetShader(gPixelLightingPixelShader, nullptr, 0);
-    
-    // States - no blending, normal depth buffer and culling
-    gD3DContext->OMSetBlendState(gNoBlendingState, nullptr, 0xffffff);
-    gD3DContext->OMSetDepthStencilState(gUseDepthBufferState, 0);
-    gD3DContext->RSSetState(gCullBackState);
-
-    // Select the approriate textures and sampler to use in the pixel shader
-    gD3DContext->PSSetShaderResources(0, 1, &gCharacterDiffuseSpecularMapSRV); // First parameter must match texture slot number in the shader
-    gD3DContext->PSSetSamplers(0, 1, &gAnisotropic4xSampler);
-
-    gCharacter->Render();
-    TestModel->Render();
+    for (int i = 0; i < NUM_CHARACTERS; ++i)
+    {
+        gCharacters[i]->SetVSShader(gSkinningVertexShader);
+        gCharacters[i]->Render();
+    }
 
     //// Render non-skinned models ////
-
-    // Select which shaders to use next
-    gD3DContext->VSSetShader(gPixelLightingVertexShader, nullptr, 0); // Only need to change the vertex shader from skinning
-    
-
-    // Render lit models, only change textures for each onee
-    gD3DContext->PSSetShaderResources(0, 1, &gGroundDiffuseSpecularMapSRV); // First parameter must match texture slot number in the shader
     gGround->Render();
     
-
-    gD3DContext->PSSetShaderResources(0, 1, &gCrateDiffuseSpecularMapSRV);
     gCrate->Render();
-
-    gD3DContext->PSSetShaderResources(0, 1, &gFloorDiffuseMapSRV);
+    
     gFloor->Render();
 
-    gD3DContext->PSSetShaderResources(0, 1, &gTeapotDiffuseMapSRV);
     gTeapot->Render();
 
-    
-
-    gD3DContext->PSSetShader(gTextureFadePixelShader, nullptr, 0);
-    gD3DContext->PSSetShaderResources(0, 1, &gFadeOneDiffuseMapSRV);
-    gD3DContext->PSSetShaderResources(2, 1, &gFadeTwoDiffuseMapSRV);
-    gCube->Render();
-
-    gD3DContext->PSSetShader(gPixelLightingPixelShader, nullptr, 0);
-    gD3DContext->VSSetShader(gWiggleVertexShader, nullptr, 0);
+    gSphere->SetVSShader(gWiggleVertexShader);
     gSphere->Render();
 
+    gCubes[0]->SetPSShader(gTextureFadePixelShader);
+
     // Render Additive cube
-    gD3DContext->VSSetShader(gBasicTransformVertexShader, nullptr, 0);
-    gD3DContext->PSSetShader(gLightModelPixelShader, nullptr, 0);
-    gD3DContext->PSSetShaderResources(0, 1, &gLightDiffuseMapSRV);
-    gD3DContext->OMSetBlendState(gAdditiveBlendingState, nullptr, 0xffffff);
-    gD3DContext->OMSetDepthStencilState(gDepthReadOnlyState, 0);
-    gD3DContext->RSSetState(gCullNoneState);
-    gAdditiveCube->Render();
+    gCubes[1]->SetVSShader(gBasicTransformVertexShader);
+    gCubes[1]->SetPSShader(gLightModelPixelShader);
+    gCubes[1]->SetBlendType(EBlendType::Additive);
+    gCubes[1]->SetCull(ECullType::None);
 
     // Render Multiplicative cube
-    gD3DContext->VSSetShader(gBasicTransformVertexShader, nullptr, 0);
-    gD3DContext->PSSetShader(gSimplePixelShader, nullptr, 0);
-    gD3DContext->PSSetShaderResources(0, 1, &gGlassDiffuseMapSRV);
-    gD3DContext->OMSetBlendState(gMultiplicativeBlendingState, nullptr, 0xffffff);
-    gD3DContext->OMSetDepthStencilState(gDepthReadOnlyState, 0);
-    gD3DContext->RSSetState(gCullNoneState);
-    gMultiplicativeCube->Render();
+    gCubes[2]->SetVSShader(gBasicTransformVertexShader);
+    gCubes[2]->SetPSShader(gSimplePixelShader);
+    gCubes[2]->SetBlendType(EBlendType::Multiplicative);
+    gCubes[2]->SetCull(ECullType::None);
 
-    // Render Alpha Cube
-    gD3DContext->PSSetShaderResources(0, 1, &gSmokeDiffuseMapSRV);
-    gD3DContext->OMSetBlendState(gAlphaBlendingState, nullptr, 0xffffff);
-    gD3DContext->OMSetDepthStencilState(gDepthReadOnlyState, 0);
-    gD3DContext->RSSetState(gCullNoneState);
-    gAlphaCube->Render();
+    // Render Alpha Cubes
+    gCubes[3]->SetVSShader(gBasicTransformVertexShader);
+    gCubes[3]->SetPSShader(gSimplePixelShader);
+    gCubes[3]->SetBlendType(EBlendType::Alpha);
+    gCubes[3]->SetCull(ECullType::None);
 
-    gD3DContext->PSSetShaderResources(0, 1, &gMoogleDiffuseMapSRV);
-    gMoogleCube->Render();
+    gCubes[4]->SetVSShader(gBasicTransformVertexShader);
+    gCubes[4]->SetPSShader(gSimplePixelShader);
+    gCubes[4]->SetBlendType(EBlendType::Alpha);
+    gCubes[4]->SetCull(ECullType::None);
+
+    for (int i = 0; i < NUM_CUBES; ++i)
+    {
+        gCubes[i]->Render();
+    }
 
     //// Render lights ////
     // Render all the lights in the array
@@ -581,7 +465,6 @@ void RenderScene()
     gPerFrameConstants.light1ProjectionMatrix = gLight[0]->GetLightProjectionMatrix();                 
     gPerFrameConstants.light1Type             = gLight[0]->GetLightType();
 
-
     gPerFrameConstants.light2Colour            = gLight[1]->GetLightColour();            
     gPerFrameConstants.light2Position          = gLight[1]->GetLightPosition();          
     gPerFrameConstants.light2Facing            = gLight[1]->GetLightFacing();            
@@ -590,7 +473,6 @@ void RenderScene()
     gPerFrameConstants.light2ProjectionMatrix  = gLight[1]->GetLightProjectionMatrix();  
     gPerFrameConstants.light2Type              = gLight[1]->GetLightType();
 
-
     gPerFrameConstants.light3Colour           = gLight[2]->GetLightColour();
     gPerFrameConstants.light3Position         = gLight[2]->GetLightPosition();         
     gPerFrameConstants.light3Facing           = gLight[2]->GetLightFacing();           
@@ -598,7 +480,6 @@ void RenderScene()
     gPerFrameConstants.light3ViewMatrix       = gLight[2]->GetLightViewMatrix();       
     gPerFrameConstants.light3ProjectionMatrix = gLight[2]->GetLightProjectionMatrix(); 
     gPerFrameConstants.light3Type             = gLight[2]->GetLightType();
-
 
     gPerFrameConstants.light4Colour           = gLight[3]->GetLightColour();
     gPerFrameConstants.light4Position         = gLight[3]->GetLightPosition();        
@@ -688,20 +569,20 @@ void RenderScene()
 // Update models and camera. frameTime is the time passed since the last frame
 void UpdateScene(float frameTime)
 {
-    gCharacter->Control(20, frameTime, Key_0, Key_0, Key_0, Key_0, Key_U, Key_O, Key_I, Key_0); // Wave
-
+    gCharacters[0]->GetModel()->Control(20, frameTime, Key_0, Key_0, Key_0, Key_0, Key_U, Key_O, Key_I, Key_0); // Wave
+    
 	// Control character part. First parameter is node number - index from flattened depth-first array of model parts. 0 is root
-	gCharacter->Control(33, frameTime, Key_0, Key_0, Key_0, Key_0, Key_0, Key_0, Key_I, Key_0); // Head
-	gCharacter->Control(37, frameTime, Key_0, Key_0, Key_0, Key_0, Key_0, Key_0, Key_T, Key_0); // Left Lower Leg
-	gCharacter->Control(41, frameTime, Key_0, Key_0, Key_0, Key_0, Key_0, Key_0, Key_T, Key_0); // Right Lower Leg
-	gCharacter->Control(6,  frameTime, Key_0, Key_0, Key_0, Key_0, Key_0, Key_0, Key_Z, Key_0); // Right Lower Arm
-	gCharacter->Control(20, frameTime, Key_0, Key_0, Key_0, Key_0, Key_0, Key_0, Key_Z, Key_0); // Left Lower Arm
+	gCharacters[0]->GetModel()->Control(33, frameTime, Key_0, Key_0, Key_0, Key_0, Key_0, Key_0, Key_I, Key_0); // Head
+	gCharacters[0]->GetModel()->Control(37, frameTime, Key_0, Key_0, Key_0, Key_0, Key_0, Key_0, Key_T, Key_0); // Left Lower Leg
+	gCharacters[0]->GetModel()->Control(41, frameTime, Key_0, Key_0, Key_0, Key_0, Key_0, Key_0, Key_T, Key_0); // Right Lower Leg
+	gCharacters[0]->GetModel()->Control(6,  frameTime, Key_0, Key_0, Key_0, Key_0, Key_0, Key_0, Key_Z, Key_0); // Right Lower Arm
+	gCharacters[0]->GetModel()->Control(20, frameTime, Key_0, Key_0, Key_0, Key_0, Key_0, Key_0, Key_Z, Key_0); // Left Lower Arm
 
     gPerFrameConstants.wiggle += sin(gWiggle * 6);
 
     for (int i = 0; i < NUM_LIGHTS; ++i)
     {
-        gLight[i]->UpdateScene(frameTime, gCharacter);
+        gLight[i]->UpdateScene(frameTime, gCharacters[0]->GetModel());
     }
 
 	// Control camera (will update its view matrix)
