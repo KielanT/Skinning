@@ -33,6 +33,15 @@ struct SkinningVertex
 
 //*******************
 
+// Normal Mapping Vertex
+struct TangentVertex
+{
+    float3 position : position;
+    float3 normal : normal;
+    float3 tangent : tangent;
+    float2 uv : uv;
+};
+
 
 // This structure describes what data the lighting pixel shader receives from the vertex shader.
 // The projected position is a required output from all vertex shaders - where the vertex is on the screen
@@ -60,6 +69,23 @@ struct SimplePixelShaderInput
     float2 uv : uv;
 };
 
+struct BasicPixelShaderInput
+{
+    float4 projectedPosition : SV_Position;
+};
+
+// Data for Normal mapping
+struct NormalMappingPixelShaderInput
+{
+    float4 projectedPosition : SV_Position; 
+                                            
+    float3 worldPosition : worldPosition; 
+    float3 worldNormal : worldNormal;
+    float3 modelNormal   : modelNormal; 
+    float3 modelTangent  : modelTangent; 
+    
+    float2 uv : uv;
+};
 
 //--------------------------------------------------------------------------------------
 // Constant Buffers
@@ -139,6 +165,12 @@ cbuffer PerFrameConstants : register(b0) // The b0 gives this constant buffer th
     float    padding16;
     
     float    gWiggle;
+    float    gParallaxDepth;
+    float    pad;
+    float    pad2;
+    
+    float3 gOutlineColour; 
+    float  gOutlineThickness; 
 }
 // Note constant buffers are not structs: we don't use the name of the constant buffer, these are really just a collection of global variables (hence the 'g')
 

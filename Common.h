@@ -124,6 +124,12 @@ struct PerFrameConstants
     float      padding16;
 
     float      wiggle;
+    float      parallaxDepth;
+    float      pad;
+    float      pad2;
+
+    CVector3   outlineColour;    // Cell shading outline colour
+    float      outlineThickness;
 };
 
 extern PerFrameConstants gPerFrameConstants;      // This variable holds the CPU-side constant buffer described above

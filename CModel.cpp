@@ -142,6 +142,14 @@ CModel::~CModel()
 	}
 }
 
+void CModel::SetMesh(std::string mesh, bool requireTangent)
+{
+	delete mMesh;
+	delete mModel;
+	mMesh = new Mesh(mesh, requireTangent);
+	mModel = new Model(mMesh);
+}
+
 void CModel::SetBlendType(EBlendType type)
 {
 	if (type == EBlendType::NoBlend)
@@ -210,7 +218,7 @@ void CModel::Render()
 	
 	if (mDiffusesMapSRVs.empty())
 	{
-		SetPSShaderResource(mDiffuseMapSRV);       // Shader Resource							 
+		SetPSShaderResource(mDiffuseMapSRV);		 
 	}
 	else
 	{

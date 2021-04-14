@@ -7,6 +7,15 @@
   </ProjectOutputs>
   <ContentFiles>
     <ContentFile>
+      <FullPath>D:\Documents\UCLan Year Two\Graphics\Assignment\Skinning\CellShadingOutline_ps.cso</FullPath>
+    </ContentFile>
+    <ContentFile>
+      <FullPath>D:\Documents\UCLan Year Two\Graphics\Assignment\Skinning\CellShadingOutline_vs.cso</FullPath>
+    </ContentFile>
+    <ContentFile>
+      <FullPath>D:\Documents\UCLan Year Two\Graphics\Assignment\Skinning\CellShading_ps.cso</FullPath>
+    </ContentFile>
+    <ContentFile>
       <FullPath>D:\Documents\UCLan Year Two\Graphics\Assignment\Skinning\DepthOnly_ps.cso</FullPath>
     </ContentFile>
     <ContentFile>
@@ -14,6 +23,15 @@
     </ContentFile>
     <ContentFile>
       <FullPath>D:\Documents\UCLan Year Two\Graphics\Assignment\Skinning\BasicTransform_vs.cso</FullPath>
+    </ContentFile>
+    <ContentFile>
+      <FullPath>D:\Documents\UCLan Year Two\Graphics\Assignment\Skinning\NormalMapping_vs.cso</FullPath>
+    </ContentFile>
+    <ContentFile>
+      <FullPath>D:\Documents\UCLan Year Two\Graphics\Assignment\Skinning\NormalMap_ps.cso</FullPath>
+    </ContentFile>
+    <ContentFile>
+      <FullPath>D:\Documents\UCLan Year Two\Graphics\Assignment\Skinning\ParallaxMapping_ps.cso</FullPath>
     </ContentFile>
     <ContentFile>
       <FullPath>D:\Documents\UCLan Year Two\Graphics\Assignment\Skinning\PixelLighting_ps.cso</FullPath>

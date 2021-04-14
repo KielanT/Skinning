@@ -24,6 +24,12 @@ extern ID3D11VertexShader* gWiggleVertexShader;
 extern ID3D11PixelShader*  gTextureFadePixelShader;
 extern ID3D11PixelShader*  gSimplePixelShader;
 extern ID3D11PixelShader*  gDepthOnlyPixelShader;
+extern ID3D11VertexShader* gNormalMapVertexShader;
+extern ID3D11PixelShader*  gNormalMapPixelShader;
+extern ID3D11PixelShader*  gParallaxMapPixelShader;
+extern ID3D11VertexShader* gCellShadingOutlineVertexShader;
+extern ID3D11PixelShader*  gCellShadingOutlinePixelShader;
+extern ID3D11PixelShader*  gCellShadingPixelShader;
 
 
 //--------------------------------------------------------------------------------------

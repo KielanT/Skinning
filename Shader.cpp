@@ -15,15 +15,21 @@
 //**** Update Shader.h if you add things here ****//
 
 // Vertex and pixel shader DirectX objects
-ID3D11VertexShader* gPixelLightingVertexShader  = nullptr;
-ID3D11PixelShader*  gPixelLightingPixelShader   = nullptr;
-ID3D11VertexShader* gBasicTransformVertexShader = nullptr;
-ID3D11VertexShader* gSkinningVertexShader       = nullptr; // Skinning is performed in the vertex shader (matrix work), we can use any pixel shader for lighting etc.
-ID3D11PixelShader*  gLightModelPixelShader      = nullptr;
-ID3D11VertexShader* gWiggleVertexShader         = nullptr;
-ID3D11PixelShader*  gTextureFadePixelShader     = nullptr;
-ID3D11PixelShader*  gSimplePixelShader          = nullptr;
-ID3D11PixelShader*  gDepthOnlyPixelShader       = nullptr;
+ID3D11VertexShader* gPixelLightingVertexShader      = nullptr;
+ID3D11PixelShader*  gPixelLightingPixelShader       = nullptr;
+ID3D11VertexShader* gBasicTransformVertexShader     = nullptr;
+ID3D11VertexShader* gSkinningVertexShader           = nullptr; // Skinning is performed in the vertex shader (matrix work), we can use any pixel shader for lighting etc.
+ID3D11PixelShader*  gLightModelPixelShader          = nullptr;
+ID3D11VertexShader* gWiggleVertexShader             = nullptr;
+ID3D11PixelShader*  gTextureFadePixelShader         = nullptr;
+ID3D11PixelShader*  gSimplePixelShader              = nullptr;
+ID3D11PixelShader*  gDepthOnlyPixelShader           = nullptr;
+ID3D11VertexShader* gNormalMapVertexShader          = nullptr;
+ID3D11PixelShader*  gNormalMapPixelShader           = nullptr;
+ID3D11PixelShader*  gParallaxMapPixelShader         = nullptr;
+ID3D11VertexShader* gCellShadingOutlineVertexShader = nullptr;
+ID3D11PixelShader*  gCellShadingOutlinePixelShader  = nullptr;
+ID3D11PixelShader*  gCellShadingPixelShader         = nullptr;
 
 
 
@@ -37,21 +43,30 @@ bool LoadShaders()
     // Shaders must be added to the Visual Studio project to be compiled, they use the extension ".hlsl".
     // To load them for use, include them here without the extension. Use the correct function for each.
     // Ensure you release the shaders in the ShutdownDirect3D function below
-    gPixelLightingVertexShader  = LoadVertexShader("PixelLighting_vs"); // Note how the shader files are named to show what type they are
-    gPixelLightingPixelShader   = LoadPixelShader ("PixelLighting_ps");
-    gBasicTransformVertexShader = LoadVertexShader("BasicTransform_vs");
-    gSkinningVertexShader       = LoadVertexShader("Skinning_vs");
-    gLightModelPixelShader      = LoadPixelShader ("LightModel_ps");
-    gWiggleVertexShader         = LoadVertexShader("WiggleShader_vs");
-    gTextureFadePixelShader     = LoadPixelShader ("TextureFade_ps");
-    gSimplePixelShader          = LoadPixelShader ("TextureAlpha_ps");
-    gDepthOnlyPixelShader       = LoadPixelShader ("DepthOnly_ps");
+    gPixelLightingVertexShader      = LoadVertexShader("PixelLighting_vs"); // Note how the shader files are named to show what type they are
+    gPixelLightingPixelShader       = LoadPixelShader ("PixelLighting_ps");
+    gBasicTransformVertexShader     = LoadVertexShader("BasicTransform_vs");
+    gSkinningVertexShader           = LoadVertexShader("Skinning_vs");
+    gLightModelPixelShader          = LoadPixelShader ("LightModel_ps");
+    gWiggleVertexShader             = LoadVertexShader("WiggleShader_vs");
+    gTextureFadePixelShader         = LoadPixelShader ("TextureFade_ps");
+    gSimplePixelShader              = LoadPixelShader ("TextureAlpha_ps");
+    gDepthOnlyPixelShader           = LoadPixelShader ("DepthOnly_ps");
+    gNormalMapVertexShader          = LoadVertexShader("NormalMapping_vs");
+    gNormalMapPixelShader           = LoadPixelShader ("NormalMap_ps");
+    gParallaxMapPixelShader         = LoadPixelShader ("ParallaxMapping_ps");
+    gCellShadingOutlineVertexShader = LoadVertexShader("CellShadingOutline_vs");
+    gCellShadingOutlinePixelShader  = LoadPixelShader ("CellShadingOutline_ps");
+    gCellShadingPixelShader         = LoadPixelShader ("CellShading_ps");
 
-    if (gPixelLightingVertexShader  == nullptr || gPixelLightingPixelShader == nullptr ||
-        gBasicTransformVertexShader == nullptr || gSkinningVertexShader     == nullptr || 
-        gLightModelPixelShader      == nullptr || gWiggleVertexShader       == nullptr ||
-        gTextureFadePixelShader     == nullptr || gSimplePixelShader        == nullptr ||
-        gDepthOnlyPixelShader == nullptr)
+    if (gPixelLightingVertexShader      == nullptr || gPixelLightingPixelShader      == nullptr ||
+        gBasicTransformVertexShader     == nullptr || gSkinningVertexShader          == nullptr || 
+        gLightModelPixelShader          == nullptr || gWiggleVertexShader            == nullptr ||
+        gTextureFadePixelShader         == nullptr || gSimplePixelShader             == nullptr ||
+        gDepthOnlyPixelShader           == nullptr || gNormalMapVertexShader         == nullptr ||
+        gNormalMapPixelShader           == nullptr || gParallaxMapPixelShader        == nullptr ||
+        gCellShadingOutlineVertexShader == nullptr || gCellShadingOutlinePixelShader == nullptr ||
+        gCellShadingPixelShader         == nullptr)
     {
         gLastError = "Error loading shaders";
         return false;
@@ -63,15 +78,22 @@ bool LoadShaders()
 
 void ReleaseShaders()
 {
-    if (gLightModelPixelShader)       gLightModelPixelShader->Release();
-    if (gSkinningVertexShader)        gSkinningVertexShader->Release();
-    if (gBasicTransformVertexShader)  gBasicTransformVertexShader->Release();
-    if (gPixelLightingPixelShader)    gPixelLightingPixelShader->Release();
-    if (gPixelLightingVertexShader)   gPixelLightingVertexShader->Release();
-    if (gWiggleVertexShader)          gWiggleVertexShader->Release();
-    if (gTextureFadePixelShader)      gTextureFadePixelShader->Release();
-    if (gSimplePixelShader)           gSimplePixelShader->Release();
-    if (gDepthOnlyPixelShader)        gDepthOnlyPixelShader->Release();
+    if (gLightModelPixelShader)             gLightModelPixelShader->Release();
+    if (gSkinningVertexShader)              gSkinningVertexShader->Release();
+    if (gBasicTransformVertexShader)        gBasicTransformVertexShader->Release();
+    if (gPixelLightingPixelShader)          gPixelLightingPixelShader->Release();
+    if (gPixelLightingVertexShader)         gPixelLightingVertexShader->Release();
+    if (gWiggleVertexShader)                gWiggleVertexShader->Release();
+    if (gTextureFadePixelShader)            gTextureFadePixelShader->Release();
+    if (gSimplePixelShader)                 gSimplePixelShader->Release();
+    if (gDepthOnlyPixelShader)              gDepthOnlyPixelShader->Release();
+    if (gNormalMapVertexShader)             gNormalMapVertexShader->Release();
+    if (gNormalMapPixelShader)              gNormalMapPixelShader->Release();
+    if (gParallaxMapPixelShader)            gParallaxMapPixelShader->Release();
+    if (gCellShadingOutlineVertexShader)    gCellShadingOutlineVertexShader->Release();
+    if (gCellShadingOutlinePixelShader)     gCellShadingOutlinePixelShader->Release();
+    if (gCellShadingPixelShader)            gCellShadingPixelShader->Release();
+
 
 }
 

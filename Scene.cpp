@@ -53,6 +53,16 @@ CModel* gGround;
 CModel* gFloor;
 CModel* gTeapot;
 CModel* gSphere;
+CModel* gMyCar;
+
+// Need to be done the old way due to limitations/bugs with the CModel class
+Mesh* gCubeMesh;
+Mesh* gTeapotMesh;
+Mesh* gTrollMesh;
+
+Model* gNormalMapCube;
+Model* gParallaxTeapot;
+Model* gTroll;
 
 
 // Store lights in an array in this exercise
@@ -67,6 +77,9 @@ float gWiggle = 6.0f;
 
 ColourRGBA gBackgroundColor = { 0.2f, 0.2f, 0.3f, 1.0f };
 
+CVector3 OutlineColour = { 1, 1, 0 };
+float    OutlineThickness = 0.015f;
+
 float gSpotlightConeAngle = 90.0f;
 
 // Lock FPS to monitor refresh rate, which will typically set it to 60fps. Press 'p' to toggle to full fps
@@ -79,6 +92,8 @@ int gShadowMapSize = 2048;  // Quality of shadow map
 ID3D11Texture2D*          gShadowMap1Texture      = nullptr;
 ID3D11DepthStencilView*   gShadowMap1DepthStencil = nullptr;
 ID3D11ShaderResourceView* gShadowMap1SRV          = nullptr;
+
+
 
 //--------------------------------------------------------------------------------------
 // Constant Buffers
@@ -104,11 +119,21 @@ ID3D11Buffer*     gPerModelConstantBuffer; // --"--
 ID3D11Resource*           gCharacterDiffuseSpecularMap    = nullptr; // This object represents the memory used by the texture on the GPU
 ID3D11ShaderResourceView* gCharacterDiffuseSpecularMapSRV = nullptr; // This object is used to give shaders access to the texture above (SRV = shader resource view)
 
-ID3D11Resource*           gFadeOneDiffuseMap = nullptr;
-ID3D11ShaderResourceView* gFadeOneDiffuseMapSRV = nullptr;
+ID3D11Resource*           gCubeDiffuseSpecularMap = nullptr; // This object represents the memory used by the texture on the GPU
+ID3D11Resource*           gCubeNormalMap = nullptr; // This object represents the memory used by the texture on the GPU
+ID3D11ShaderResourceView* gCubeDiffuseSpecularMapSRV = nullptr;
+ID3D11ShaderResourceView* gCubeNormalMapSRV = nullptr;
 
-ID3D11Resource*           gFadeTwoDiffuseMap = nullptr;
-ID3D11ShaderResourceView* gFadeTwoDiffuseMapSRV = nullptr;
+ID3D11Resource*             gTeapotNormalHeightMap = nullptr;
+ID3D11ShaderResourceView*   gTeapotNormalHeightMapSRV = nullptr;
+
+ID3D11Resource* gTrollDiffuseMap = nullptr; 
+ID3D11ShaderResourceView* gTrollDiffuseMapSRV = nullptr;
+
+ID3D11Resource* gCellMap = nullptr;
+ID3D11ShaderResourceView* gCellMapSRV = nullptr;
+
+float gParallaxDepth = 0.3f;
 
 //--------------------------------------------------------------------------------------
 // Initialise scene geometry, constant buffers and states
@@ -121,7 +146,9 @@ bool InitGeometry()
     // Load mesh geometry data, just like TL-Engine this doesn't create anything in the scene. Create a Model for that.
     try 
     {
-        
+        gCubeMesh = new Mesh("cube.x", true);
+        gTeapotMesh = new Mesh("teapot.x", true);
+        gTrollMesh = new Mesh("troll.x");
     }
     catch (std::runtime_error e)  // Constructors cannot return error messages so use exceptions to catch mesh errors (fairly standard approach this)
     {
@@ -156,10 +183,14 @@ bool InitGeometry()
     // The LoadTexture function requires you to pass a ID3D11Resource* (e.g. &gCubeDiffuseMap), which manages the GPU memory for the
     // texture and also a ID3D11ShaderResourceView* (e.g. &gCubeDiffuseMapSRV), which allows us to use the texture in shaders
     // The function will fill in these pointers with usable data. The variables used here are globals found near the top of the file.
-    if (!LoadTexture("ManDiffuseSpecular.dds",   &gCharacterDiffuseSpecularMap, &gCharacterDiffuseSpecularMapSRV) ||
-        !LoadTexture("tech02.jpg",               &gFadeOneDiffuseMap,           &gFadeOneDiffuseMapSRV          ) ||
-        !LoadTexture("Wood2.jpg",                &gFadeTwoDiffuseMap,           &gFadeTwoDiffuseMapSRV          ))
+    if (!LoadTexture("ManDiffuseSpecular.dds",      &gCharacterDiffuseSpecularMap, &gCharacterDiffuseSpecularMapSRV) ||
+        !LoadTexture("PatternDiffuseSpecular.dds",  &gCubeDiffuseSpecularMap,      &gCubeDiffuseSpecularMapSRV     ) ||
+        !LoadTexture("PatternNormal.dds",           &gCubeNormalMap,               &gCubeNormalMapSRV              ) ||
+        !LoadTexture("PatternNormalHeight.dds",     &gTeapotNormalHeightMap,       &gTeapotNormalHeightMapSRV      ) ||
+        !LoadTexture("Green.png",                   &gTrollDiffuseMap,             &gTrollDiffuseMapSRV            ) ||
+        !LoadTexture("CellGradient.png",            &gCellMap,                     &gCellMapSRV))
     {
+
         gLastError = "Error loading textures";
         return false;
     }
@@ -212,6 +243,10 @@ bool InitGeometry()
     }
 
 
+
+
+
+
     //*****************************//
 
   	// Create all filtering modes, blending modes etc. used by the app (see State.cpp/.h)
@@ -249,7 +284,6 @@ bool InitScene()
 
     gGround = new CModel("GrassDiffuseSpecular.dds");
     gGround->SetMesh("Hills.x");
-	
     gCrate = new CModel("CargoA.dds");
     gCrate->SetMesh("CargoContainer.x");
     gCrate->SetPosition({ 45, 0, 45 });
@@ -258,15 +292,15 @@ bool InitScene()
 
     gFloor = new CModel("Wood2.jpg");
     gFloor->SetMesh("Floor.x");
-    gFloor->SetPosition({ -300, 0, 0 });
+    gFloor->SetPosition({ -320, 0, 0 });
 
     gTeapot = new CModel("tech02.jpg");
     gTeapot->SetMesh("Teapot.x");
-    gTeapot->SetPosition({ -340, 0, 0 });
+    gTeapot->SetPosition({ -320, 0, 0 });
 
     gSphere = new CModel("tech02.jpg");
     gSphere->SetMesh("Sphere.x");
-    gSphere->SetPosition({ -300, 10, 30 });
+    gSphere->SetPosition({ -320, 10, 30 });
     gSphere->SetScale(.5f);
 
     for (int i = 0; i < NUM_CUBES; ++i)
@@ -298,6 +332,22 @@ bool InitScene()
     gCubes[4]->SetPosition({ -320, 10, 140 });
     gCubes[4]->SetName("Moogle Cube");
 
+    gNormalMapCube = new Model(gCubeMesh); 
+    gNormalMapCube->SetPosition({ -320, 10, 160 });
+
+    gParallaxTeapot = new Model(gTeapotMesh);
+    gParallaxTeapot->SetPosition({ -320, 0, -20 });
+
+    gTroll = new Model(gTrollMesh);
+    gTroll->SetPosition({ -320, 0, -40 });
+    gTroll->SetRotation({ 0, -80, 0 });
+    gTroll->SetScale(4.0f);
+
+    gMyCar = new CModel("tech02.jpg");
+    gMyCar->SetMesh("car.fbx");
+    gMyCar->SetPosition({ -360, 0, 130 }); // When I made the model I set the pivot point to the centre of the car but for some reason in this program the pivot point is off
+    gMyCar->SetRotation({ 0, 200, 0 });
+    gMyCar->SetScale(.2f);
 
     // Light set-up - using an array this time
     for (int i = 0; i < NUM_LIGHTS; ++i)
@@ -351,10 +401,16 @@ void ReleaseResources()
 
     if (gCharacterDiffuseSpecularMapSRV) gCharacterDiffuseSpecularMapSRV->Release();
     if (gCharacterDiffuseSpecularMap)    gCharacterDiffuseSpecularMap->Release();
-    if (gFadeOneDiffuseMap)              gFadeOneDiffuseMap->Release();
-    if (gFadeOneDiffuseMapSRV)           gFadeOneDiffuseMapSRV->Release();
-    if (gFadeTwoDiffuseMap)              gFadeTwoDiffuseMap->Release();
-    if (gFadeTwoDiffuseMapSRV)           gFadeTwoDiffuseMapSRV->Release();
+    if (gCubeDiffuseSpecularMap)         gCubeDiffuseSpecularMap->Release();
+    if (gCubeDiffuseSpecularMapSRV)      gCubeDiffuseSpecularMapSRV->Release();
+    if (gCubeNormalMap)                  gCubeNormalMap->Release();
+    if (gCubeNormalMapSRV)               gCubeNormalMapSRV->Release();
+    if (gTeapotNormalHeightMap)          gTeapotNormalHeightMap->Release();
+    if (gTeapotNormalHeightMapSRV)       gTeapotNormalHeightMapSRV->Release();
+    if (gCellMapSRV)                     gCellMapSRV->Release();
+    if (gCellMap)                        gCellMap->Release();
+    if (gTrollDiffuseMapSRV)             gTrollDiffuseMapSRV->Release();
+    if (gTrollDiffuseMap)                gTrollDiffuseMap->Release();
 
     if (gPerModelConstantBuffer)  gPerModelConstantBuffer->Release();
     if (gPerFrameConstantBuffer)  gPerFrameConstantBuffer->Release();
@@ -366,10 +422,15 @@ void ReleaseResources()
     {
         delete gLight[i];  gLight[i] = nullptr;
     }
-    delete gCamera;                   gCamera             = nullptr;
+    delete gCamera;           gCamera           = nullptr;
+    delete gNormalMapCube;    gNormalMapCube    = nullptr;
+    delete gParallaxTeapot;   gParallaxTeapot   = nullptr;
+    delete gTroll;            gTroll            = nullptr;
+
+    delete gCubeMesh;         gCubeMesh         = nullptr;
+    delete gTeapotMesh;       gTeapotMesh       = nullptr;
+    delete gTrollMesh;        gTrollMesh        = nullptr;
 }
-
-
 
 //--------------------------------------------------------------------------------------
 // Scene Rendering
@@ -389,7 +450,25 @@ void RenderSceneFromCamera(Camera* camera)
     gD3DContext->VSSetConstantBuffers(0, 1, &gPerFrameConstantBuffer); // First parameter must match constant buffer number in the shader 
     gD3DContext->PSSetConstantBuffers(0, 1, &gPerFrameConstantBuffer);
 
+    gD3DContext->VSSetShader(gCellShadingOutlineVertexShader, nullptr, 0);
+    gD3DContext->PSSetShader(gCellShadingOutlinePixelShader, nullptr, 0);
+    gD3DContext->OMSetBlendState(gNoBlendingState, nullptr, 0xffffff);
+    gD3DContext->OMSetDepthStencilState(gUseDepthBufferState, 0);
+    gD3DContext->RSSetState(gCullFrontState);
+    gTroll->Render();
 
+    gD3DContext->VSSetShader(gPixelLightingVertexShader, nullptr, 0);
+    gD3DContext->PSSetShader(gCellShadingPixelShader, nullptr, 0);
+
+    gD3DContext->RSSetState(gCullBackState);
+
+    gD3DContext->PSSetShaderResources(0, 1, &gTrollDiffuseMapSRV); 
+    gD3DContext->PSSetSamplers(0, 1, &gAnisotropic4xSampler);
+
+    gD3DContext->PSSetShaderResources(2, 1, &gCellMapSRV); 
+    gD3DContext->PSSetSamplers(2, 1, &gPointSampler);
+    gTroll->Render();
+    
     //// Render skinned models ////
     for (int i = 0; i < NUM_CHARACTERS; ++i)
     {
@@ -405,6 +484,9 @@ void RenderSceneFromCamera(Camera* camera)
     gFloor->Render();
 
     gTeapot->Render();
+
+    gMyCar->SetCull(ECullType::None);
+    gMyCar->Render();
 
     gSphere->SetVSShader(gWiggleVertexShader);
     gSphere->Render();
@@ -439,6 +521,25 @@ void RenderSceneFromCamera(Camera* camera)
         gCubes[i]->Render();
     }
 
+    gD3DContext->VSSetShader(gNormalMapVertexShader, nullptr, 0);
+    gD3DContext->PSSetShader(gNormalMapPixelShader, nullptr, 0);
+
+    gD3DContext->OMSetBlendState(gNoBlendingState, nullptr, 0xffffff);
+    gD3DContext->OMSetDepthStencilState(gUseDepthBufferState, 0);
+    gD3DContext->RSSetState(gCullBackState);
+    
+    gD3DContext->PSSetShaderResources(0, 1, &gCubeDiffuseSpecularMapSRV); // First parameter must match texture slot number in the shaer
+    gD3DContext->PSSetShaderResources(2, 1, &gCubeNormalMapSRV);
+    gD3DContext->PSSetSamplers(0, 1, &gAnisotropic4xSampler);
+    gNormalMapCube->Render();
+
+    gD3DContext->VSSetShader(gNormalMapVertexShader, nullptr, 0);
+    gD3DContext->PSSetShader(gParallaxMapPixelShader, nullptr, 0);
+    gD3DContext->PSSetShaderResources(2, 1, &gTeapotNormalHeightMapSRV);
+    gParallaxTeapot->Render();
+
+
+
     //// Render lights ////
     // Render all the lights in the array
     for (int i = 0; i < NUM_LIGHTS; ++i)
@@ -457,49 +558,53 @@ void RenderScene()
     // Don't send to the GPU yet, the function RenderSceneFromCamera will do that
 
     //Light 1 as spotlight
-    gPerFrameConstants.light1Colour           = gLight[0]->GetLightColour();                                     
-    gPerFrameConstants.light1Position         = gLight[0]->GetLightPosition();                                 
-    gPerFrameConstants.light1Facing           = gLight[0]->GetLightFacing();                                     
-    gPerFrameConstants.light1CosHalfAngle     = gLight[0]->GetLightCosHalfAngle();                            
-    gPerFrameConstants.light1ViewMatrix       = gLight[0]->GetLightViewMatrix();                             
-    gPerFrameConstants.light1ProjectionMatrix = gLight[0]->GetLightProjectionMatrix();                 
-    gPerFrameConstants.light1Type             = gLight[0]->GetLightType();
+    gPerFrameConstants.light1Colour = gLight[0]->GetLightColour();
+    gPerFrameConstants.light1Position = gLight[0]->GetLightPosition();
+    gPerFrameConstants.light1Facing = gLight[0]->GetLightFacing();
+    gPerFrameConstants.light1CosHalfAngle = gLight[0]->GetLightCosHalfAngle();
+    gPerFrameConstants.light1ViewMatrix = gLight[0]->GetLightViewMatrix();
+    gPerFrameConstants.light1ProjectionMatrix = gLight[0]->GetLightProjectionMatrix();
+    gPerFrameConstants.light1Type = gLight[0]->GetLightType();
 
-    gPerFrameConstants.light2Colour            = gLight[1]->GetLightColour();            
-    gPerFrameConstants.light2Position          = gLight[1]->GetLightPosition();          
-    gPerFrameConstants.light2Facing            = gLight[1]->GetLightFacing();            
-    gPerFrameConstants.light2CosHalfAngle      = gLight[1]->GetLightCosHalfAngle();      
-    gPerFrameConstants.light2ViewMatrix        = gLight[1]->GetLightViewMatrix();        
-    gPerFrameConstants.light2ProjectionMatrix  = gLight[1]->GetLightProjectionMatrix();  
-    gPerFrameConstants.light2Type              = gLight[1]->GetLightType();
+    gPerFrameConstants.light2Colour = gLight[1]->GetLightColour();
+    gPerFrameConstants.light2Position = gLight[1]->GetLightPosition();
+    gPerFrameConstants.light2Facing = gLight[1]->GetLightFacing();
+    gPerFrameConstants.light2CosHalfAngle = gLight[1]->GetLightCosHalfAngle();
+    gPerFrameConstants.light2ViewMatrix = gLight[1]->GetLightViewMatrix();
+    gPerFrameConstants.light2ProjectionMatrix = gLight[1]->GetLightProjectionMatrix();
+    gPerFrameConstants.light2Type = gLight[1]->GetLightType();
 
-    gPerFrameConstants.light3Colour           = gLight[2]->GetLightColour();
-    gPerFrameConstants.light3Position         = gLight[2]->GetLightPosition();         
-    gPerFrameConstants.light3Facing           = gLight[2]->GetLightFacing();           
-    gPerFrameConstants.light3CosHalfAngle     = gLight[2]->GetLightCosHalfAngle();     
-    gPerFrameConstants.light3ViewMatrix       = gLight[2]->GetLightViewMatrix();       
-    gPerFrameConstants.light3ProjectionMatrix = gLight[2]->GetLightProjectionMatrix(); 
-    gPerFrameConstants.light3Type             = gLight[2]->GetLightType();
+    gPerFrameConstants.light3Colour = gLight[2]->GetLightColour();
+    gPerFrameConstants.light3Position = gLight[2]->GetLightPosition();
+    gPerFrameConstants.light3Facing = gLight[2]->GetLightFacing();
+    gPerFrameConstants.light3CosHalfAngle = gLight[2]->GetLightCosHalfAngle();
+    gPerFrameConstants.light3ViewMatrix = gLight[2]->GetLightViewMatrix();
+    gPerFrameConstants.light3ProjectionMatrix = gLight[2]->GetLightProjectionMatrix();
+    gPerFrameConstants.light3Type = gLight[2]->GetLightType();
 
-    gPerFrameConstants.light4Colour           = gLight[3]->GetLightColour();
-    gPerFrameConstants.light4Position         = gLight[3]->GetLightPosition();        
-    gPerFrameConstants.light4Facing           = gLight[3]->GetLightFacing();          
-    gPerFrameConstants.light4CosHalfAngle     = gLight[3]->GetLightCosHalfAngle();    
-    gPerFrameConstants.light4ViewMatrix       = gLight[3]->GetLightViewMatrix();      
+    gPerFrameConstants.light4Colour = gLight[3]->GetLightColour();
+    gPerFrameConstants.light4Position = gLight[3]->GetLightPosition();
+    gPerFrameConstants.light4Facing = gLight[3]->GetLightFacing();
+    gPerFrameConstants.light4CosHalfAngle = gLight[3]->GetLightCosHalfAngle();
+    gPerFrameConstants.light4ViewMatrix = gLight[3]->GetLightViewMatrix();
     gPerFrameConstants.light4ProjectionMatrix = gLight[3]->GetLightProjectionMatrix();
-    gPerFrameConstants.light4Type             = gLight[3]->GetLightType();
+    gPerFrameConstants.light4Type = gLight[3]->GetLightType();
 
-    gPerFrameConstants.light5Colour           = gLight[4]->GetLightColour();          
-    gPerFrameConstants.light5Position         = gLight[4]->GetLightPosition();        
-    gPerFrameConstants.light5Facing           = gLight[4]->GetLightFacing();          
-    gPerFrameConstants.light5CosHalfAngle     = gLight[4]->GetLightCosHalfAngle();    
-    gPerFrameConstants.light5ViewMatrix       = gLight[4]->GetLightViewMatrix();      
+    gPerFrameConstants.light5Colour = gLight[4]->GetLightColour();
+    gPerFrameConstants.light5Position = gLight[4]->GetLightPosition();
+    gPerFrameConstants.light5Facing = gLight[4]->GetLightFacing();
+    gPerFrameConstants.light5CosHalfAngle = gLight[4]->GetLightCosHalfAngle();
+    gPerFrameConstants.light5ViewMatrix = gLight[4]->GetLightViewMatrix();
     gPerFrameConstants.light5ProjectionMatrix = gLight[4]->GetLightProjectionMatrix();
-    gPerFrameConstants.light5Type             = gLight[4]->GetLightType();
+    gPerFrameConstants.light5Type = gLight[4]->GetLightType();
 
-    gPerFrameConstants.ambientColour  = gAmbientColour;
-    gPerFrameConstants.specularPower  = gSpecularPower;
+    gPerFrameConstants.ambientColour = gAmbientColour;
+    gPerFrameConstants.specularPower = gSpecularPower;
     gPerFrameConstants.cameraPosition = gCamera->Position();
+    gPerFrameConstants.parallaxDepth = gParallaxDepth;
+    gPerFrameConstants.outlineColour = OutlineColour;           // Not Getting Set to the GPU
+    gPerFrameConstants.outlineThickness = OutlineThickness;     // Not Getting Set to the GPU
+   
 
     // Render from light's point of view 
     D3D11_VIEWPORT vp;

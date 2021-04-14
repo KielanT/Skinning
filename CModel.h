@@ -60,13 +60,8 @@ public:
 	// Setters
 	void SetName(std::string name) { mName = name; }
 
-	void SetMesh(std::string mesh) 
-	{ 
-		delete mMesh;
-		delete mModel;
-		mMesh = new Mesh(mesh);  
-		mModel = new Model(mMesh); 
-	}
+	void SetMesh(std::string mesh, bool requireTangent = false);
+	
 	void SetMesh(Mesh* mesh)
 	{
 		delete mMesh;
@@ -74,6 +69,14 @@ public:
 		mMesh = mesh;
 		mModel = new Model(mMesh);
 	}
+	//void SetMesh(Mesh* mesh, bool requireTangent = false)
+	//{
+	//	delete mMesh;
+	//	delete mModel;
+	//	mMesh = mesh;
+	//	mModel = new Model(mMesh);
+	//}
+
 
 	void SetShaders(ID3D11VertexShader* vs, ID3D11PixelShader* ps)
 	{
@@ -133,6 +136,7 @@ private:
 	{
 		gD3DContext->PSSetShaderResources(0, 1, &shaderResourceView);
 	}
+	
 	void SetPSShaderResource(std::vector<ID3D11ShaderResourceView*> shaderResourceView)
 	{
 		for (int i = 0; i < mDiffusesMapSRVs.size(); ++i)
