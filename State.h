@@ -34,6 +34,7 @@ extern ID3D11RasterizerState*   gCullNoneState;
 extern ID3D11DepthStencilState* gUseDepthBufferState;
 extern ID3D11DepthStencilState* gDepthReadOnlyState;
 extern ID3D11DepthStencilState* gNoDepthBufferState;
+extern ID3D11DepthStencilState* gLessEqualDepthBufferState;
 
 
 //--------------------------------------------------------------------------------------

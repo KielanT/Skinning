@@ -1,0 +1,3 @@
+﻿D:\Documents\UCLan Year Two\Graphics\Assignment\Skinning\CellShading_ps.hlsl(100,32): error X5589: Invalid const register num: 62. Max allowed is 31.
+  
+  compilation failed; no code produced

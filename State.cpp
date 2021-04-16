@@ -37,6 +37,7 @@ ID3D11RasterizerState* gCullNoneState          = nullptr;
 ID3D11DepthStencilState* gUseDepthBufferState  = nullptr;
 ID3D11DepthStencilState* gDepthReadOnlyState   = nullptr;
 ID3D11DepthStencilState* gNoDepthBufferState   = nullptr;
+ID3D11DepthStencilState* gLessEqualDepthBufferState = nullptr;
 
 
 
@@ -276,7 +277,17 @@ bool CreateStates()
         gLastError = "Error creating depth-read-only state";
         return false;
     }
+   
 
+    depthStencilDesc.DepthEnable = TRUE;
+    depthStencilDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO; 
+    depthStencilDesc.DepthFunc = D3D11_COMPARISON_LESS_EQUAL;
+    depthStencilDesc.StencilEnable = FALSE;
+    if (FAILED(gD3DDevice->CreateDepthStencilState(&depthStencilDesc, &gLessEqualDepthBufferState)))
+    {
+        gLastError = "Error creating less equal state";
+        return false;
+    }
 
 	////-------- Disable depth buffer --------////
     depthStencilDesc.DepthEnable      = FALSE;
@@ -301,6 +312,7 @@ void ReleaseStates()
     if (gUseDepthBufferState)           gUseDepthBufferState->Release();
     if (gDepthReadOnlyState)            gDepthReadOnlyState->Release();
     if (gNoDepthBufferState)            gNoDepthBufferState->Release();
+    if (gLessEqualDepthBufferState)     gLessEqualDepthBufferState->Release();
     if (gCullBackState)                 gCullBackState->Release();
     if (gCullFrontState)                gCullFrontState->Release();
     if (gCullNoneState)                 gCullNoneState->Release();

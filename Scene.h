@@ -6,6 +6,8 @@
 #ifndef _SCENE_H_INCLUDED_
 #define _SCENE_H_INCLUDED_
 
+
+
 //--------------------------------------------------------------------------------------
 // Scene Geometry and Layout
 //--------------------------------------------------------------------------------------
@@ -26,10 +28,11 @@ void ReleaseResources();
 // Scene Render and Update
 //--------------------------------------------------------------------------------------
 
-void RenderScene();
+void RenderScene(float frameTime);
 
 // frameTime is the time passed since the last frame
 void UpdateScene(float frameTime);
+
 
 
 #endif //_SCENE_H_INCLUDED_

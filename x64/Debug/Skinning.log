@@ -1,2 +1,9 @@
-﻿  Scene.cpp
+﻿  CModel.cpp
+  Direct3DSetup.cpp
+  Light.cpp
+  Mesh.cpp
+  Scene.cpp
+  Shader.cpp
+  GraphicsHelpers.cpp
+  Generating Code...
   Skinning.vcxproj -> D:\Documents\UCLan Year Two\Graphics\Assignment\Skinning\Skinning.exe

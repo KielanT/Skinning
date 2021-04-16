@@ -41,5 +41,9 @@ inline float ToDegrees(float r)
     return  r * 180.0f / PI;
 }
 
+inline float Random(const float a, const float b)
+{
+    return a + (b - a) * (static_cast<float>(rand()) / RAND_MAX);
+}
 
 #endif // _MATH_HELPERS_H_DEFINED_

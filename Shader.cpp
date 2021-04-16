@@ -15,21 +15,24 @@
 //**** Update Shader.h if you add things here ****//
 
 // Vertex and pixel shader DirectX objects
-ID3D11VertexShader* gPixelLightingVertexShader      = nullptr;
-ID3D11PixelShader*  gPixelLightingPixelShader       = nullptr;
-ID3D11VertexShader* gBasicTransformVertexShader     = nullptr;
-ID3D11VertexShader* gSkinningVertexShader           = nullptr; // Skinning is performed in the vertex shader (matrix work), we can use any pixel shader for lighting etc.
-ID3D11PixelShader*  gLightModelPixelShader          = nullptr;
-ID3D11VertexShader* gWiggleVertexShader             = nullptr;
-ID3D11PixelShader*  gTextureFadePixelShader         = nullptr;
-ID3D11PixelShader*  gSimplePixelShader              = nullptr;
-ID3D11PixelShader*  gDepthOnlyPixelShader           = nullptr;
-ID3D11VertexShader* gNormalMapVertexShader          = nullptr;
-ID3D11PixelShader*  gNormalMapPixelShader           = nullptr;
-ID3D11PixelShader*  gParallaxMapPixelShader         = nullptr;
-ID3D11VertexShader* gCellShadingOutlineVertexShader = nullptr;
-ID3D11PixelShader*  gCellShadingOutlinePixelShader  = nullptr;
-ID3D11PixelShader*  gCellShadingPixelShader         = nullptr;
+ID3D11VertexShader*   gPixelLightingVertexShader      = nullptr;
+ID3D11PixelShader*    gPixelLightingPixelShader       = nullptr;
+ID3D11VertexShader*   gBasicTransformVertexShader     = nullptr;
+ID3D11VertexShader*   gSkinningVertexShader           = nullptr; // Skinning is performed in the vertex shader (matrix work), we can use any pixel shader for lighting etc.
+ID3D11PixelShader*    gLightModelPixelShader          = nullptr;
+ID3D11VertexShader*   gWiggleVertexShader             = nullptr;
+ID3D11PixelShader*    gTextureFadePixelShader         = nullptr;
+ID3D11PixelShader*    gSimplePixelShader              = nullptr;
+ID3D11PixelShader*    gDepthOnlyPixelShader           = nullptr;
+ID3D11VertexShader*   gNormalMapVertexShader          = nullptr;
+ID3D11PixelShader*    gNormalMapPixelShader           = nullptr;
+ID3D11PixelShader*    gParallaxMapPixelShader         = nullptr;
+ID3D11VertexShader*   gCellShadingOutlineVertexShader = nullptr;
+ID3D11PixelShader*    gCellShadingOutlinePixelShader  = nullptr;
+ID3D11PixelShader*    gCellShadingPixelShader         = nullptr;
+ID3D11VertexShader*   gCubeMapVertexShader            = nullptr;
+ID3D11PixelShader*    gCubeMapPixelShader             = nullptr;
+ID3D11PixelShader*    gTintPixelShader                = nullptr;
 
 
 
@@ -58,6 +61,9 @@ bool LoadShaders()
     gCellShadingOutlineVertexShader = LoadVertexShader("CellShadingOutline_vs");
     gCellShadingOutlinePixelShader  = LoadPixelShader ("CellShadingOutline_ps");
     gCellShadingPixelShader         = LoadPixelShader ("CellShading_ps");
+    gCubeMapVertexShader            = LoadVertexShader("CubeMap_vs");
+    gCubeMapPixelShader             = LoadPixelShader ("CubeMap_ps");
+    gTintPixelShader                = LoadPixelShader ("PixelLightingWithTint_ps");
 
     if (gPixelLightingVertexShader      == nullptr || gPixelLightingPixelShader      == nullptr ||
         gBasicTransformVertexShader     == nullptr || gSkinningVertexShader          == nullptr || 
@@ -66,7 +72,8 @@ bool LoadShaders()
         gDepthOnlyPixelShader           == nullptr || gNormalMapVertexShader         == nullptr ||
         gNormalMapPixelShader           == nullptr || gParallaxMapPixelShader        == nullptr ||
         gCellShadingOutlineVertexShader == nullptr || gCellShadingOutlinePixelShader == nullptr ||
-        gCellShadingPixelShader         == nullptr)
+        gCellShadingPixelShader         == nullptr || gCubeMapVertexShader           == nullptr ||
+        gCubeMapPixelShader             == nullptr || gTintPixelShader               == nullptr)
     {
         gLastError = "Error loading shaders";
         return false;
@@ -94,7 +101,9 @@ void ReleaseShaders()
     if (gCellShadingOutlinePixelShader)     gCellShadingOutlinePixelShader->Release();
     if (gCellShadingPixelShader)            gCellShadingPixelShader->Release();
 
-
+    if (gCubeMapVertexShader)               gCubeMapVertexShader->Release();
+    if (gCubeMapPixelShader)                gCubeMapPixelShader->Release();
+    if (gTintPixelShader)                   gTintPixelShader->Release();
 }
 
 
@@ -131,6 +140,69 @@ ID3D11VertexShader* LoadVertexShader(std::string shaderName)
     return shader;
 }
 
+// Load a geometry shader, include the file in the project and pass the name (without the .hlsl extension)
+// to this function. The returned pointer needs to be released before quitting. Returns nullptr on failure. 
+// Basically the same code as above but for pixel shaders
+ID3D11GeometryShader* LoadGeometryShader(std::string shaderName)
+{
+    // Open compiled shader object file
+    std::ifstream shaderFile(shaderName + ".cso", std::ios::in | std::ios::binary | std::ios::ate);
+    if (!shaderFile.is_open())
+    {
+        return nullptr;
+    }
+
+    // Read file into vector of chars
+    std::streamoff fileSize = shaderFile.tellg();
+    shaderFile.seekg(0, std::ios::beg);
+    std::vector<char>byteCode(fileSize);
+    shaderFile.read(&byteCode[0], fileSize);
+    if (shaderFile.fail())
+    {
+        return nullptr;
+    }
+
+    // Create shader object from loaded file (we will use the object later when rendering)
+    ID3D11GeometryShader* shader;
+    HRESULT hr = gD3DDevice->CreateGeometryShader(byteCode.data(), byteCode.size(), nullptr, &shader);
+    if (FAILED(hr))
+    {
+        return nullptr;
+    }
+
+    return shader;
+}
+
+ID3D11GeometryShader* LoadStreamOutGeometryShader(std::string shaderName, D3D11_SO_DECLARATION_ENTRY* soDecl, unsigned int soNumEntries, unsigned int soStride)
+{
+    // Open compiled shader object file
+    std::ifstream shaderFile(shaderName + ".cso", std::ios::in | std::ios::binary | std::ios::ate);
+    if (!shaderFile.is_open())
+    {
+        return nullptr;
+    }
+
+    // Read file into vector of chars
+    std::streamoff fileSize = shaderFile.tellg();
+    shaderFile.seekg(0, std::ios::beg);
+    std::vector<char>byteCode(fileSize);
+    shaderFile.read(&byteCode[0], fileSize);
+    if (shaderFile.fail())
+    {
+        return nullptr;
+    }
+
+    // Create shader object from loaded file (we will use the object later when rendering)
+    ID3D11GeometryShader* shader;
+    HRESULT hr = gD3DDevice->CreateGeometryShaderWithStreamOutput(byteCode.data(), byteCode.size(),
+        soDecl, soNumEntries, &soStride, 1, D3D11_SO_NO_RASTERIZED_STREAM, nullptr, &shader);
+    if (FAILED(hr))
+    {
+        return nullptr;
+    }
+
+    return shader;
+}
 
 // Load a pixel shader, include the file in the project and pass the name (without the .hlsl extension)
 // to this function. The returned pointer needs to be released before quitting. Returns nullptr on failure. 

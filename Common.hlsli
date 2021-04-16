@@ -17,6 +17,14 @@ struct BasicVertex
 };
 
 
+// Particle data
+struct ParticleData
+{
+    float3 position : position; 
+    float3 velocity : velocity; 
+    float life : life; 
+};
+
 //*******************
 
 // The structure below describes the vertex data to be sent into the vertex shader for skinned models
@@ -87,6 +95,19 @@ struct NormalMappingPixelShaderInput
     float2 uv : uv;
 };
 
+struct VertexIn
+{
+    float3 PosL : POSITION;
+};
+
+struct VertexOut
+{
+    float4 Posh : SV_POSITION;
+    float3 PosL : POSITION;
+
+};
+
+
 //--------------------------------------------------------------------------------------
 // Constant Buffers
 //--------------------------------------------------------------------------------------
@@ -99,6 +120,7 @@ struct NormalMappingPixelShaderInput
 // These variables must match exactly the gPerFrameConstants structure in Scene.cpp
 cbuffer PerFrameConstants : register(b0) // The b0 gives this constant buffer the number 0 - used in the C++ code
 {
+    float4x4 gCameraMatrix;
     float4x4 gViewMatrix;
     float4x4 gProjectionMatrix;
     float4x4 gViewProjectionMatrix; // The above two matrices multiplied together to combine their effects
@@ -162,7 +184,7 @@ cbuffer PerFrameConstants : register(b0) // The b0 gives this constant buffer th
     float    gSpecularPower;
 
     float3   gCameraPosition;
-    float    padding16;
+    float    gFrameTime;
     
     float    gWiggle;
     float    gParallaxDepth;

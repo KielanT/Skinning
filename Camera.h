@@ -52,6 +52,7 @@ public:
 	void SetFarClip (float farClip )  { mFarClip  = farClip;  }
 
 	// Read only access to camera matrices, updated on request from position, rotation and camera settings
+	CMatrix4x4 WorldMatrix()			{ UpdateMatrices(); return mWorldMatrix; }
 	CMatrix4x4 ViewMatrix()            { UpdateMatrices(); return mViewMatrix;           }
 	CMatrix4x4 ProjectionMatrix()      { UpdateMatrices(); return mProjectionMatrix;     }
 	CMatrix4x4 ViewProjectionMatrix()  { UpdateMatrices(); return mViewProjectionMatrix; }

@@ -58,6 +58,7 @@ extern std::string gLastError;
 struct PerFrameConstants
 {
     // These are the matrices used to position the camera
+    CMatrix4x4 cameraMatrix;
     CMatrix4x4 viewMatrix;
     CMatrix4x4 projectionMatrix;
     CMatrix4x4 viewProjectionMatrix; // The above two matrices multiplied together to combine their effects
@@ -121,7 +122,7 @@ struct PerFrameConstants
     float      specularPower;
 
     CVector3   cameraPosition;
-    float      padding16;
+    float      frameTime;
 
     float      wiggle;
     float      parallaxDepth;

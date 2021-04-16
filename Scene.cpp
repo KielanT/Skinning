@@ -59,10 +59,17 @@ CModel* gMyCar;
 Mesh* gCubeMesh;
 Mesh* gTeapotMesh;
 Mesh* gTrollMesh;
+Mesh* gSphereMesh;
 
 Model* gNormalMapCube;
 Model* gParallaxTeapot;
 Model* gTroll;
+
+Model* gSkyBox;
+
+// I made a cube in blender, UV unwrapped it and set up cube mapping in there instead of code
+Mesh*  gMySkyBoxMesh;
+Model* gMySkyBox;
 
 
 // Store lights in an array in this exercise
@@ -77,8 +84,8 @@ float gWiggle = 6.0f;
 
 ColourRGBA gBackgroundColor = { 0.2f, 0.2f, 0.3f, 1.0f };
 
-CVector3 OutlineColour = { 1, 1, 0 };
-float    OutlineThickness = 0.015f;
+CVector3 OutlineColour = { 0, 0, 0 };
+float    OutlineThickness = 0.03f;
 
 float gSpotlightConeAngle = 90.0f;
 
@@ -92,8 +99,6 @@ int gShadowMapSize = 2048;  // Quality of shadow map
 ID3D11Texture2D*          gShadowMap1Texture      = nullptr;
 ID3D11DepthStencilView*   gShadowMap1DepthStencil = nullptr;
 ID3D11ShaderResourceView* gShadowMap1SRV          = nullptr;
-
-
 
 //--------------------------------------------------------------------------------------
 // Constant Buffers
@@ -124,16 +129,23 @@ ID3D11Resource*           gCubeNormalMap = nullptr; // This object represents th
 ID3D11ShaderResourceView* gCubeDiffuseSpecularMapSRV = nullptr;
 ID3D11ShaderResourceView* gCubeNormalMapSRV = nullptr;
 
-ID3D11Resource*             gTeapotNormalHeightMap = nullptr;
-ID3D11ShaderResourceView*   gTeapotNormalHeightMapSRV = nullptr;
+ID3D11Resource*           gTeapotNormalHeightMap = nullptr;
+ID3D11ShaderResourceView* gTeapotNormalHeightMapSRV = nullptr;
 
-ID3D11Resource* gTrollDiffuseMap = nullptr; 
+ID3D11Resource*           gTrollDiffuseMap = nullptr; 
 ID3D11ShaderResourceView* gTrollDiffuseMapSRV = nullptr;
 
-ID3D11Resource* gCellMap = nullptr;
+ID3D11Resource*           gCellMap = nullptr;
 ID3D11ShaderResourceView* gCellMapSRV = nullptr;
 
+ID3D11Resource*           gCubeMap;
+ID3D11ShaderResourceView* gCubeMapSRV;
+
+ID3D11Resource*           gMySkyBoxMap = nullptr;
+ID3D11ShaderResourceView* gMySkyBoxMapSRV = nullptr;
+
 float gParallaxDepth = 0.3f;
+
 
 //--------------------------------------------------------------------------------------
 // Initialise scene geometry, constant buffers and states
@@ -146,6 +158,8 @@ bool InitGeometry()
     // Load mesh geometry data, just like TL-Engine this doesn't create anything in the scene. Create a Model for that.
     try 
     {
+        gMySkyBoxMesh = new Mesh("MySkyBox.fbx");
+        gSphereMesh = new Mesh("Sphere.x");
         gCubeMesh = new Mesh("cube.x", true);
         gTeapotMesh = new Mesh("teapot.x", true);
         gTrollMesh = new Mesh("troll.x");
@@ -156,6 +170,25 @@ bool InitGeometry()
         return false;
     }
 
+    //// Load / prepare textures on the GPU ////
+
+    // Load textures and create DirectX objects for them
+    // The LoadTexture function requires you to pass a ID3D11Resource* (e.g. &gCubeDiffuseMap), which manages the GPU memory for the
+    // texture and also a ID3D11ShaderResourceView* (e.g. &gCubeDiffuseMapSRV), which allows us to use the texture in shaders
+    // The function will fill in these pointers with usable data. The variables used here are globals found near the top of the file.
+    if (!LoadTexture("ManDiffuseSpecular.dds", &gCharacterDiffuseSpecularMap, &gCharacterDiffuseSpecularMapSRV) ||
+        !LoadTexture("PatternDiffuseSpecular.dds", &gCubeDiffuseSpecularMap, &gCubeDiffuseSpecularMapSRV) ||
+        !LoadTexture("PatternNormal.dds", &gCubeNormalMap, &gCubeNormalMapSRV) ||
+        !LoadTexture("PatternNormalHeight.dds", &gTeapotNormalHeightMap, &gTeapotNormalHeightMapSRV) ||
+        !LoadTexture("Green.png", &gTrollDiffuseMap, &gTrollDiffuseMapSRV) ||
+        !LoadTexture("CubeMap.dds", &gCubeMap, &gCubeMapSRV) ||
+        !LoadTexture("MyCubeMap.png", &gMySkyBoxMap, &gMySkyBoxMapSRV) ||
+        !LoadTexture("CellGradient.png", &gCellMap, &gCellMapSRV))
+    {
+
+        gLastError = "Error loading textures";
+        return false;
+    }
 
     // Load the shaders required for the geometry we will use (see Shader.cpp / .h)
     if (!LoadShaders())
@@ -163,7 +196,6 @@ bool InitGeometry()
         gLastError = "Error loading shaders";
         return false;
     }
-
 
     // Create GPU-side constant buffers to receive the gPerFrameConstants and gPerModelConstants structures above
     // These allow us to pass data from CPU to shaders such as lighting information or matrices
@@ -177,23 +209,6 @@ bool InitGeometry()
     }
 
 
-    //// Load / prepare textures on the GPU ////
-
-    // Load textures and create DirectX objects for them
-    // The LoadTexture function requires you to pass a ID3D11Resource* (e.g. &gCubeDiffuseMap), which manages the GPU memory for the
-    // texture and also a ID3D11ShaderResourceView* (e.g. &gCubeDiffuseMapSRV), which allows us to use the texture in shaders
-    // The function will fill in these pointers with usable data. The variables used here are globals found near the top of the file.
-    if (!LoadTexture("ManDiffuseSpecular.dds",      &gCharacterDiffuseSpecularMap, &gCharacterDiffuseSpecularMapSRV) ||
-        !LoadTexture("PatternDiffuseSpecular.dds",  &gCubeDiffuseSpecularMap,      &gCubeDiffuseSpecularMapSRV     ) ||
-        !LoadTexture("PatternNormal.dds",           &gCubeNormalMap,               &gCubeNormalMapSRV              ) ||
-        !LoadTexture("PatternNormalHeight.dds",     &gTeapotNormalHeightMap,       &gTeapotNormalHeightMapSRV      ) ||
-        !LoadTexture("Green.png",                   &gTrollDiffuseMap,             &gTrollDiffuseMapSRV            ) ||
-        !LoadTexture("CellGradient.png",            &gCellMap,                     &gCellMapSRV))
-    {
-
-        gLastError = "Error loading textures";
-        return false;
-    }
 
     //**** Create Shadow Map texture ****//
 
@@ -241,11 +256,6 @@ bool InitGeometry()
         gLastError = "Error creating shadow map shader resource view";
         return false;
     }
-
-
-
-
-
 
     //*****************************//
 
@@ -343,12 +353,21 @@ bool InitScene()
     gTroll->SetRotation({ 0, -80, 0 });
     gTroll->SetScale(4.0f);
 
-    gMyCar = new CModel("tech02.jpg");
-    gMyCar->SetMesh("car.fbx");
-    gMyCar->SetPosition({ -360, 0, 130 }); // When I made the model I set the pivot point to the centre of the car but for some reason in this program the pivot point is off
+    gMyCar = new CModel("CarTexture.png");
+    gMyCar->SetMesh("MyCar.fbx");
+    gMyCar->SetPosition({ -320, 0, 200 }); // When I made the model I set the pivot point to the centre of the car but for some reason in this program the pivot point is off
     gMyCar->SetRotation({ 0, 200, 0 });
     gMyCar->SetScale(.2f);
 
+    gSkyBox = new Model(gSphereMesh);
+    gSkyBox->SetPosition({ 0, 0, 0 });
+
+    gMySkyBox = new Model(gMySkyBoxMesh);
+    gMySkyBox->SetScale(0.1f);
+    //gMySkyBox->SetScale(10.0f); // For use as a skybox
+    gMySkyBox->SetPosition({ -320, 10, -60 });
+    //gMySkyBox->SetPosition({ 0, 0, 0 }); // For use as a skybox
+    
     // Light set-up - using an array this time
     for (int i = 0; i < NUM_LIGHTS; ++i)
     {
@@ -411,6 +430,10 @@ void ReleaseResources()
     if (gCellMap)                        gCellMap->Release();
     if (gTrollDiffuseMapSRV)             gTrollDiffuseMapSRV->Release();
     if (gTrollDiffuseMap)                gTrollDiffuseMap->Release();
+    if (gCubeMap)                        gCubeMap->Release();
+    if (gCubeMapSRV)                     gCubeMapSRV->Release();
+    if (gMySkyBoxMapSRV)                 gMySkyBoxMapSRV->Release();
+    if (gMySkyBoxMap)                    gMySkyBoxMap->Release();
 
     if (gPerModelConstantBuffer)  gPerModelConstantBuffer->Release();
     if (gPerFrameConstantBuffer)  gPerFrameConstantBuffer->Release();
@@ -426,10 +449,14 @@ void ReleaseResources()
     delete gNormalMapCube;    gNormalMapCube    = nullptr;
     delete gParallaxTeapot;   gParallaxTeapot   = nullptr;
     delete gTroll;            gTroll            = nullptr;
+    delete gSkyBox;           gSkyBox           = nullptr;
 
     delete gCubeMesh;         gCubeMesh         = nullptr;
     delete gTeapotMesh;       gTeapotMesh       = nullptr;
     delete gTrollMesh;        gTrollMesh        = nullptr;
+
+    delete gMySkyBox;       gMySkyBox = nullptr;
+    delete gMySkyBoxMesh;   gMySkyBoxMesh = nullptr;
 }
 
 //--------------------------------------------------------------------------------------
@@ -441,33 +468,15 @@ void ReleaseResources()
 void RenderSceneFromCamera(Camera* camera)
 {
     // Set camera matrices in the constant buffer and send over to GPU
+    gPerFrameConstants.cameraMatrix         = camera->WorldMatrix();
     gPerFrameConstants.viewMatrix           = camera->ViewMatrix();
     gPerFrameConstants.projectionMatrix     = camera->ProjectionMatrix();
     gPerFrameConstants.viewProjectionMatrix = camera->ViewProjectionMatrix();
     UpdateConstantBuffer(gPerFrameConstantBuffer, gPerFrameConstants);
 
     // Indicate that the constant buffer we just updated is for use in the vertex shader (VS) and pixel shader (PS)
-    gD3DContext->VSSetConstantBuffers(0, 1, &gPerFrameConstantBuffer); // First parameter must match constant buffer number in the shader 
+    gD3DContext->VSSetConstantBuffers(0, 1, &gPerFrameConstantBuffer); // First parameter must match constant buffer number in the shader
     gD3DContext->PSSetConstantBuffers(0, 1, &gPerFrameConstantBuffer);
-
-    gD3DContext->VSSetShader(gCellShadingOutlineVertexShader, nullptr, 0);
-    gD3DContext->PSSetShader(gCellShadingOutlinePixelShader, nullptr, 0);
-    gD3DContext->OMSetBlendState(gNoBlendingState, nullptr, 0xffffff);
-    gD3DContext->OMSetDepthStencilState(gUseDepthBufferState, 0);
-    gD3DContext->RSSetState(gCullFrontState);
-    gTroll->Render();
-
-    gD3DContext->VSSetShader(gPixelLightingVertexShader, nullptr, 0);
-    gD3DContext->PSSetShader(gCellShadingPixelShader, nullptr, 0);
-
-    gD3DContext->RSSetState(gCullBackState);
-
-    gD3DContext->PSSetShaderResources(0, 1, &gTrollDiffuseMapSRV); 
-    gD3DContext->PSSetSamplers(0, 1, &gAnisotropic4xSampler);
-
-    gD3DContext->PSSetShaderResources(2, 1, &gCellMapSRV); 
-    gD3DContext->PSSetSamplers(2, 1, &gPointSampler);
-    gTroll->Render();
     
     //// Render skinned models ////
     for (int i = 0; i < NUM_CHARACTERS; ++i)
@@ -487,9 +496,6 @@ void RenderSceneFromCamera(Camera* camera)
 
     gMyCar->SetCull(ECullType::None);
     gMyCar->Render();
-
-    gSphere->SetVSShader(gWiggleVertexShader);
-    gSphere->Render();
 
     gCubes[0]->SetPSShader(gTextureFadePixelShader);
 
@@ -538,7 +544,31 @@ void RenderSceneFromCamera(Camera* camera)
     gD3DContext->PSSetShaderResources(2, 1, &gTeapotNormalHeightMapSRV);
     gParallaxTeapot->Render();
 
+    // Render Troll Outline
+    gD3DContext->VSSetShader(gCellShadingOutlineVertexShader, nullptr, 0);
+    gD3DContext->PSSetShader(gCellShadingOutlinePixelShader, nullptr, 0);
+    gD3DContext->RSSetState(gCullFrontState);
+    gTroll->Render();
 
+    // Render Main Troll
+    gD3DContext->VSSetShader(gPixelLightingVertexShader, nullptr, 0);
+    gD3DContext->PSSetShader(gCellShadingPixelShader, nullptr, 0);
+    gD3DContext->RSSetState(gCullBackState);
+    gD3DContext->PSSetShaderResources(0, 1, &gTrollDiffuseMapSRV);
+    gD3DContext->PSSetShaderResources(2, 1, &gCellMapSRV);
+    gD3DContext->PSSetSamplers(2, 1, &gPointSampler);
+    gTroll->Render();
+
+    gD3DContext->VSSetShader(gBasicTransformVertexShader, nullptr, 0);
+    gD3DContext->PSSetShader(gLightModelPixelShader, nullptr, 0);
+    gD3DContext->RSSetState(gCullNoneState);
+    gD3DContext->PSSetShaderResources(0, 1, &gMySkyBoxMapSRV);
+    gMySkyBox->Render();
+
+    gPerModelConstants.objectColour = { 1, 1, 0 };
+    gSphere->SetPSShader(gTintPixelShader);
+    gSphere->SetVSShader(gWiggleVertexShader);
+    gSphere->Render();
 
     //// Render lights ////
     // Render all the lights in the array
@@ -550,7 +580,7 @@ void RenderSceneFromCamera(Camera* camera)
 }
 
 // Rendering the scene
-void RenderScene()
+void RenderScene(float frameTime)
 {
     //// Common settings ////
 
@@ -558,53 +588,53 @@ void RenderScene()
     // Don't send to the GPU yet, the function RenderSceneFromCamera will do that
 
     //Light 1 as spotlight
-    gPerFrameConstants.light1Colour = gLight[0]->GetLightColour();
-    gPerFrameConstants.light1Position = gLight[0]->GetLightPosition();
-    gPerFrameConstants.light1Facing = gLight[0]->GetLightFacing();
-    gPerFrameConstants.light1CosHalfAngle = gLight[0]->GetLightCosHalfAngle();
-    gPerFrameConstants.light1ViewMatrix = gLight[0]->GetLightViewMatrix();
+    gPerFrameConstants.light1Colour           = gLight[0]->GetLightColour();
+    gPerFrameConstants.light1Position         = gLight[0]->GetLightPosition();
+    gPerFrameConstants.light1Facing           = gLight[0]->GetLightFacing();
+    gPerFrameConstants.light1CosHalfAngle     = gLight[0]->GetLightCosHalfAngle();
+    gPerFrameConstants.light1ViewMatrix       = gLight[0]->GetLightViewMatrix();
     gPerFrameConstants.light1ProjectionMatrix = gLight[0]->GetLightProjectionMatrix();
-    gPerFrameConstants.light1Type = gLight[0]->GetLightType();
+    gPerFrameConstants.light1Type             = gLight[0]->GetLightType();
 
-    gPerFrameConstants.light2Colour = gLight[1]->GetLightColour();
-    gPerFrameConstants.light2Position = gLight[1]->GetLightPosition();
-    gPerFrameConstants.light2Facing = gLight[1]->GetLightFacing();
-    gPerFrameConstants.light2CosHalfAngle = gLight[1]->GetLightCosHalfAngle();
-    gPerFrameConstants.light2ViewMatrix = gLight[1]->GetLightViewMatrix();
+    gPerFrameConstants.light2Colour           = gLight[1]->GetLightColour();
+    gPerFrameConstants.light2Position         = gLight[1]->GetLightPosition();
+    gPerFrameConstants.light2Facing           = gLight[1]->GetLightFacing();
+    gPerFrameConstants.light2CosHalfAngle     = gLight[1]->GetLightCosHalfAngle();
+    gPerFrameConstants.light2ViewMatrix       = gLight[1]->GetLightViewMatrix();
     gPerFrameConstants.light2ProjectionMatrix = gLight[1]->GetLightProjectionMatrix();
-    gPerFrameConstants.light2Type = gLight[1]->GetLightType();
+    gPerFrameConstants.light2Type             = gLight[1]->GetLightType();
 
-    gPerFrameConstants.light3Colour = gLight[2]->GetLightColour();
-    gPerFrameConstants.light3Position = gLight[2]->GetLightPosition();
-    gPerFrameConstants.light3Facing = gLight[2]->GetLightFacing();
-    gPerFrameConstants.light3CosHalfAngle = gLight[2]->GetLightCosHalfAngle();
-    gPerFrameConstants.light3ViewMatrix = gLight[2]->GetLightViewMatrix();
+    gPerFrameConstants.light3Colour           = gLight[2]->GetLightColour();
+    gPerFrameConstants.light3Position         = gLight[2]->GetLightPosition();
+    gPerFrameConstants.light3Facing           = gLight[2]->GetLightFacing();
+    gPerFrameConstants.light3CosHalfAngle     = gLight[2]->GetLightCosHalfAngle();
+    gPerFrameConstants.light3ViewMatrix       = gLight[2]->GetLightViewMatrix();
     gPerFrameConstants.light3ProjectionMatrix = gLight[2]->GetLightProjectionMatrix();
-    gPerFrameConstants.light3Type = gLight[2]->GetLightType();
+    gPerFrameConstants.light3Type             = gLight[2]->GetLightType();
 
-    gPerFrameConstants.light4Colour = gLight[3]->GetLightColour();
-    gPerFrameConstants.light4Position = gLight[3]->GetLightPosition();
-    gPerFrameConstants.light4Facing = gLight[3]->GetLightFacing();
-    gPerFrameConstants.light4CosHalfAngle = gLight[3]->GetLightCosHalfAngle();
-    gPerFrameConstants.light4ViewMatrix = gLight[3]->GetLightViewMatrix();
+    gPerFrameConstants.light4Colour           = gLight[3]->GetLightColour();
+    gPerFrameConstants.light4Position         = gLight[3]->GetLightPosition();
+    gPerFrameConstants.light4Facing           = gLight[3]->GetLightFacing();
+    gPerFrameConstants.light4CosHalfAngle     = gLight[3]->GetLightCosHalfAngle();
+    gPerFrameConstants.light4ViewMatrix       = gLight[3]->GetLightViewMatrix();
     gPerFrameConstants.light4ProjectionMatrix = gLight[3]->GetLightProjectionMatrix();
-    gPerFrameConstants.light4Type = gLight[3]->GetLightType();
+    gPerFrameConstants.light4Type             = gLight[3]->GetLightType();
 
-    gPerFrameConstants.light5Colour = gLight[4]->GetLightColour();
-    gPerFrameConstants.light5Position = gLight[4]->GetLightPosition();
-    gPerFrameConstants.light5Facing = gLight[4]->GetLightFacing();
-    gPerFrameConstants.light5CosHalfAngle = gLight[4]->GetLightCosHalfAngle();
-    gPerFrameConstants.light5ViewMatrix = gLight[4]->GetLightViewMatrix();
+    gPerFrameConstants.light5Colour           = gLight[4]->GetLightColour();
+    gPerFrameConstants.light5Position         = gLight[4]->GetLightPosition();
+    gPerFrameConstants.light5Facing           = gLight[4]->GetLightFacing();
+    gPerFrameConstants.light5CosHalfAngle     = gLight[4]->GetLightCosHalfAngle();
+    gPerFrameConstants.light5ViewMatrix       = gLight[4]->GetLightViewMatrix();
     gPerFrameConstants.light5ProjectionMatrix = gLight[4]->GetLightProjectionMatrix();
-    gPerFrameConstants.light5Type = gLight[4]->GetLightType();
+    gPerFrameConstants.light5Type             = gLight[4]->GetLightType();
 
-    gPerFrameConstants.ambientColour = gAmbientColour;
-    gPerFrameConstants.specularPower = gSpecularPower;
-    gPerFrameConstants.cameraPosition = gCamera->Position();
-    gPerFrameConstants.parallaxDepth = gParallaxDepth;
-    gPerFrameConstants.outlineColour = OutlineColour;           // Not Getting Set to the GPU
+    gPerFrameConstants.ambientColour    = gAmbientColour;
+    gPerFrameConstants.specularPower    = gSpecularPower;
+    gPerFrameConstants.cameraPosition   = gCamera->Position();
+    gPerFrameConstants.parallaxDepth    = gParallaxDepth;
+    gPerFrameConstants.outlineColour    = OutlineColour;           // Not Getting Set to the GPU
     gPerFrameConstants.outlineThickness = OutlineThickness;     // Not Getting Set to the GPU
-   
+    gPerFrameConstants.frameTime = frameTime;
 
     // Render from light's point of view 
     D3D11_VIEWPORT vp;
@@ -652,8 +682,19 @@ void RenderScene()
     gD3DContext->PSSetShaderResources(1, 1, &gShadowMap1SRV);
     gD3DContext->PSSetSamplers(1, 1, &gPointSampler);
 
+    // Set SkyBox Followed Introduction to 3D Game Programming With DirectX 11 but it doesn't work quite right
+    gD3DContext->VSSetShader(gCubeMapVertexShader, nullptr, 0);
+    gD3DContext->PSSetShader(gCubeMapPixelShader, nullptr, 0);
+    gD3DContext->PSSetShaderResources(0, 1, &gCubeMapSRV);
+    gD3DContext->OMSetBlendState(gNoBlendingState, nullptr, 0xffffff);
+    gD3DContext->OMSetDepthStencilState(gLessEqualDepthBufferState, 0);
+    gD3DContext->RSSetState(gCullNoneState);
+    gD3DContext->PSSetSamplers(0, 1, &gAnisotropic4xSampler);
+    //gSkyBox->Render();
+
     // Render the scene from the main camera
     RenderSceneFromCamera(gCamera);
+    
 
     // Unbind shadow maps
     ID3D11ShaderResourceView* nullView = nullptr;
@@ -716,3 +757,4 @@ void UpdateScene(float frameTime)
         frameCount = 0;
     }
 }
+
