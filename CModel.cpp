@@ -3,6 +3,7 @@
 #include "State.h"
 
 
+
 CModel::CModel()
 {
 	mName = "none";
@@ -103,6 +104,27 @@ CModel::CModel(std::string texture)
 	SetPosition({ 0, 10, 0 });
 
 }
+
+CModel::CModel(CTexture* texture)
+{
+	mName = "none";
+
+	mMesh = new Mesh("Cube.x");
+	mModel = new Model(mMesh);
+
+	mVertexShader = gPixelLightingVertexShader;
+	mPixelShader = gPixelLightingPixelShader;
+
+	mBlendState = gNoBlendingState;
+	mDepthStencilState = gUseDepthBufferState;
+	mRasterizerState = gCullBackState;
+
+	mDiffuseMapSRV = texture->GetTextureSRV();
+	mSamplerState = gAnisotropic4xSampler;
+
+	SetPosition({ 0, 10, 0 });
+}
+
 
 CModel::CModel(std::vector<std::string> textures)
 {

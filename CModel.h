@@ -1,6 +1,7 @@
 #pragma once
 #include "Mesh.h"
 #include "Model.h"
+#include "CTexture.h"
 #include "GraphicsHelpers.h"
 
 enum class EBlendType : int
@@ -55,6 +56,7 @@ public:
 	CModel(Mesh* mesh, std::vector<std::string> textures);
 	CModel(std::string texture);
 	CModel(std::vector<std::string> textures);
+	CModel(CTexture* texture);
 	~CModel();
 
 	// Setters

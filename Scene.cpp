@@ -22,6 +22,7 @@
 
 #include "Light.h"
 #include "CModel.h"
+#include "CTexture.h"
 
 #include <sstream>
 #include <memory>
@@ -121,28 +122,13 @@ ID3D11Buffer*     gPerModelConstantBuffer; // --"--
 //--------------------------------------------------------------------------------------
 
 // DirectX objects controlling textures used in this lab
-ID3D11Resource*           gCharacterDiffuseSpecularMap    = nullptr; // This object represents the memory used by the texture on the GPU
-ID3D11ShaderResourceView* gCharacterDiffuseSpecularMapSRV = nullptr; // This object is used to give shaders access to the texture above (SRV = shader resource view)
-
-ID3D11Resource*           gCubeDiffuseSpecularMap = nullptr; // This object represents the memory used by the texture on the GPU
-ID3D11Resource*           gCubeNormalMap = nullptr; // This object represents the memory used by the texture on the GPU
-ID3D11ShaderResourceView* gCubeDiffuseSpecularMapSRV = nullptr;
-ID3D11ShaderResourceView* gCubeNormalMapSRV = nullptr;
-
-ID3D11Resource*           gTeapotNormalHeightMap = nullptr;
-ID3D11ShaderResourceView* gTeapotNormalHeightMapSRV = nullptr;
-
-ID3D11Resource*           gTrollDiffuseMap = nullptr; 
-ID3D11ShaderResourceView* gTrollDiffuseMapSRV = nullptr;
-
-ID3D11Resource*           gCellMap = nullptr;
-ID3D11ShaderResourceView* gCellMapSRV = nullptr;
-
-ID3D11Resource*           gCubeMap;
-ID3D11ShaderResourceView* gCubeMapSRV;
-
-ID3D11Resource*           gMySkyBoxMap = nullptr;
-ID3D11ShaderResourceView* gMySkyBoxMapSRV = nullptr;
+CTexture* gTrollTexture;
+CTexture* gManTexture;
+CTexture* gPatternTexture;
+CTexture* gPatternNormalTexture;
+CTexture* gPatternHeightTexture;
+CTexture* gCubeMapTexture;
+CTexture* gSkyBoxTexture;
 
 float gParallaxDepth = 0.3f;
 
@@ -173,22 +159,13 @@ bool InitGeometry()
     //// Load / prepare textures on the GPU ////
 
     // Load textures and create DirectX objects for them
-    // The LoadTexture function requires you to pass a ID3D11Resource* (e.g. &gCubeDiffuseMap), which manages the GPU memory for the
-    // texture and also a ID3D11ShaderResourceView* (e.g. &gCubeDiffuseMapSRV), which allows us to use the texture in shaders
-    // The function will fill in these pointers with usable data. The variables used here are globals found near the top of the file.
-    if (!LoadTexture("ManDiffuseSpecular.dds", &gCharacterDiffuseSpecularMap, &gCharacterDiffuseSpecularMapSRV) ||
-        !LoadTexture("PatternDiffuseSpecular.dds", &gCubeDiffuseSpecularMap, &gCubeDiffuseSpecularMapSRV) ||
-        !LoadTexture("PatternNormal.dds", &gCubeNormalMap, &gCubeNormalMapSRV) ||
-        !LoadTexture("PatternNormalHeight.dds", &gTeapotNormalHeightMap, &gTeapotNormalHeightMapSRV) ||
-        !LoadTexture("Green.png", &gTrollDiffuseMap, &gTrollDiffuseMapSRV) ||
-        !LoadTexture("CubeMap.dds", &gCubeMap, &gCubeMapSRV) ||
-        !LoadTexture("MyCubeMap.png", &gMySkyBoxMap, &gMySkyBoxMapSRV) ||
-        !LoadTexture("CellGradient.png", &gCellMap, &gCellMapSRV))
-    {
-
-        gLastError = "Error loading textures";
-        return false;
-    }
+    gTrollTexture = new CTexture("Green.png", "CellGradient.png");
+    gManTexture = new CTexture("ManDiffuseSpecular.dds");
+    gPatternTexture = new CTexture("PatternDiffuseSpecular.dds");
+    gPatternNormalTexture = new CTexture("PatternNormal.dds");
+    gPatternHeightTexture = new CTexture("PatternNormalHeight.dds");
+    gCubeMapTexture = new CTexture("CubeMap.dds");
+    gSkyBoxTexture = new CTexture("MyCubeMap.png");
 
     // Load the shaders required for the geometry we will use (see Shader.cpp / .h)
     if (!LoadShaders())
@@ -277,7 +254,7 @@ bool InitScene()
     //// Set up scene ////
     for (int i = 0; i < NUM_CHARACTERS; ++i)
     {
-        gCharacters[i] = new CModel("ManDiffuseSpecular.dds");
+        gCharacters[i] = new CModel(gManTexture);
         gCharacters[i]->SetMesh("Man.x");
         gCharacters[i]->SetScale(0.06f);
         gCharacters[i]->SetName("Character" + i);
@@ -355,7 +332,7 @@ bool InitScene()
 
     gMyCar = new CModel("CarTexture.png");
     gMyCar->SetMesh("MyCar.fbx");
-    gMyCar->SetPosition({ -320, 0, 200 }); // When I made the model I set the pivot point to the centre of the car but for some reason in this program the pivot point is off
+    gMyCar->SetPosition({ -320, 0, 200 });
     gMyCar->SetRotation({ 0, 200, 0 });
     gMyCar->SetScale(.2f);
 
@@ -417,23 +394,6 @@ void ReleaseResources()
     if (gShadowMap1DepthStencil)  gShadowMap1DepthStencil->Release();
     if (gShadowMap1SRV)           gShadowMap1SRV->Release();
     if (gShadowMap1Texture)       gShadowMap1Texture->Release();
-
-    if (gCharacterDiffuseSpecularMapSRV) gCharacterDiffuseSpecularMapSRV->Release();
-    if (gCharacterDiffuseSpecularMap)    gCharacterDiffuseSpecularMap->Release();
-    if (gCubeDiffuseSpecularMap)         gCubeDiffuseSpecularMap->Release();
-    if (gCubeDiffuseSpecularMapSRV)      gCubeDiffuseSpecularMapSRV->Release();
-    if (gCubeNormalMap)                  gCubeNormalMap->Release();
-    if (gCubeNormalMapSRV)               gCubeNormalMapSRV->Release();
-    if (gTeapotNormalHeightMap)          gTeapotNormalHeightMap->Release();
-    if (gTeapotNormalHeightMapSRV)       gTeapotNormalHeightMapSRV->Release();
-    if (gCellMapSRV)                     gCellMapSRV->Release();
-    if (gCellMap)                        gCellMap->Release();
-    if (gTrollDiffuseMapSRV)             gTrollDiffuseMapSRV->Release();
-    if (gTrollDiffuseMap)                gTrollDiffuseMap->Release();
-    if (gCubeMap)                        gCubeMap->Release();
-    if (gCubeMapSRV)                     gCubeMapSRV->Release();
-    if (gMySkyBoxMapSRV)                 gMySkyBoxMapSRV->Release();
-    if (gMySkyBoxMap)                    gMySkyBoxMap->Release();
 
     if (gPerModelConstantBuffer)  gPerModelConstantBuffer->Release();
     if (gPerFrameConstantBuffer)  gPerFrameConstantBuffer->Release();
@@ -534,14 +494,14 @@ void RenderSceneFromCamera(Camera* camera)
     gD3DContext->OMSetDepthStencilState(gUseDepthBufferState, 0);
     gD3DContext->RSSetState(gCullBackState);
     
-    gD3DContext->PSSetShaderResources(0, 1, &gCubeDiffuseSpecularMapSRV); // First parameter must match texture slot number in the shaer
-    gD3DContext->PSSetShaderResources(2, 1, &gCubeNormalMapSRV);
+    gD3DContext->PSSetShaderResources(0, 1, gPatternTexture->GetTexture()); // First parameter must match texture slot number in the shaer
+    gD3DContext->PSSetShaderResources(2, 1, gPatternNormalTexture->GetTexture());
     gD3DContext->PSSetSamplers(0, 1, &gAnisotropic4xSampler);
     gNormalMapCube->Render();
 
     gD3DContext->VSSetShader(gNormalMapVertexShader, nullptr, 0);
     gD3DContext->PSSetShader(gParallaxMapPixelShader, nullptr, 0);
-    gD3DContext->PSSetShaderResources(2, 1, &gTeapotNormalHeightMapSRV);
+    gD3DContext->PSSetShaderResources(2, 1, gPatternHeightTexture->GetTexture());
     gParallaxTeapot->Render();
 
     // Render Troll Outline
@@ -554,15 +514,15 @@ void RenderSceneFromCamera(Camera* camera)
     gD3DContext->VSSetShader(gPixelLightingVertexShader, nullptr, 0);
     gD3DContext->PSSetShader(gCellShadingPixelShader, nullptr, 0);
     gD3DContext->RSSetState(gCullBackState);
-    gD3DContext->PSSetShaderResources(0, 1, &gTrollDiffuseMapSRV);
-    gD3DContext->PSSetShaderResources(2, 1, &gCellMapSRV);
+    gD3DContext->PSSetShaderResources(0, 1, gTrollTexture->GetTexture());
+    gD3DContext->PSSetShaderResources(2, 1, gTrollTexture->GetTexture2());
     gD3DContext->PSSetSamplers(2, 1, &gPointSampler);
     gTroll->Render();
 
     gD3DContext->VSSetShader(gBasicTransformVertexShader, nullptr, 0);
     gD3DContext->PSSetShader(gLightModelPixelShader, nullptr, 0);
     gD3DContext->RSSetState(gCullNoneState);
-    gD3DContext->PSSetShaderResources(0, 1, &gMySkyBoxMapSRV);
+    gD3DContext->PSSetShaderResources(0, 1, gSkyBoxTexture->GetTexture());
     gMySkyBox->Render();
 
     gPerModelConstants.objectColour = { 1, 1, 0 };
@@ -685,7 +645,7 @@ void RenderScene(float frameTime)
     // Set SkyBox Followed Introduction to 3D Game Programming With DirectX 11 but it doesn't work quite right
     gD3DContext->VSSetShader(gCubeMapVertexShader, nullptr, 0);
     gD3DContext->PSSetShader(gCubeMapPixelShader, nullptr, 0);
-    gD3DContext->PSSetShaderResources(0, 1, &gCubeMapSRV);
+    gD3DContext->PSSetShaderResources(0, 1, gCubeMapTexture->GetTexture());
     gD3DContext->OMSetBlendState(gNoBlendingState, nullptr, 0xffffff);
     gD3DContext->OMSetDepthStencilState(gLessEqualDepthBufferState, 0);
     gD3DContext->RSSetState(gCullNoneState);

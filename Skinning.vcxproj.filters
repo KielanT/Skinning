@@ -29,6 +29,7 @@
     </ClCompile>
     <ClCompile Include="Light.cpp" />
     <ClCompile Include="CModel.cpp" />
+    <ClCompile Include="CTexture.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Common.h" />
@@ -65,6 +66,7 @@
     </ClInclude>
     <ClInclude Include="Light.h" />
     <ClInclude Include="CModel.h" />
+    <ClInclude Include="CTexture.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Utility">
