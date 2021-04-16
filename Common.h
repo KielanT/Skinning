@@ -9,6 +9,7 @@
 #include <d3d11.h>
 #include <string>
 
+#include "CVector2.h"
 #include "CVector3.h"
 #include "CMatrix4x4.h"
 
@@ -35,6 +36,7 @@ extern ID3D11DeviceContext*    gD3DContext;
 extern IDXGISwapChain*         gSwapChain;
 extern ID3D11RenderTargetView* gBackBufferRenderTarget;  // Back buffer is where we render to
 extern ID3D11DepthStencilView* gDepthStencil;            // The depth buffer contains a depth for each back buffer pixel
+extern ID3D11ShaderResourceView* gDepthShaderView;
 
 // Input constsnts
 extern const float ROTATION_SPEED;
@@ -64,9 +66,9 @@ struct PerFrameConstants
     CMatrix4x4 viewProjectionMatrix; // The above two matrices multiplied together to combine their effects
 
     CVector3   light1Position; // 3 floats: x, y z
-    float      padding1;       // Pad above variable to float4 (HLSL requirement - which we must duplicate in this the C++ version of the structure)
+    float      viewportWidth;       // Pad above variable to float4 (HLSL requirement - which we must duplicate in this the C++ version of the structure)
     CVector3   light1Colour;
-    float      padding2;
+    float      viewportHeight;
     CVector3   light1Facing;
     float      light1CosHalfAngle;
     CMatrix4x4 light1ViewMatrix;
@@ -152,5 +154,29 @@ struct PerModelConstants
 extern PerModelConstants gPerModelConstants;      // This variable holds the CPU-side constant buffer described above
 extern ID3D11Buffer*     gPerModelConstantBuffer; // This variable controls the GPU-side constant buffer related to the above structure
 
+struct PostProcessingConstants
+{
+    // Tint post-process settings
+    CVector3 tintColour;
+    float    paddingA;  // Pad things to collections of 4 floats (see notes in earlier labs to read about padding)
+
+    // Grey noise post-process settings
+    CVector2 noiseScale;
+    CVector2 noiseOffset;
+
+    // Burn post-process settings
+    float    burnHeight;
+    CVector3 paddingC;
+
+    // Distort post-process settings
+    float    distortLevel;
+    CVector3 paddingD;
+
+    // Spiral post-process settings
+    float    spiralLevel;
+    CVector3 paddingE;
+};
+extern PostProcessingConstants gPostProcessingConstants;      // This variable holds the CPU-side constant buffer described above
+extern ID3D11Buffer* gPostProcessingConstantBuffer;
 
 #endif //_COMMON_H_INCLUDED_

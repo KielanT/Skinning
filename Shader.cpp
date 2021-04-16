@@ -34,6 +34,13 @@ ID3D11VertexShader*   gCubeMapVertexShader            = nullptr;
 ID3D11PixelShader*    gCubeMapPixelShader             = nullptr;
 ID3D11PixelShader*    gTintPixelShader                = nullptr;
 
+// Post Procesing shaders
+ID3D11VertexShader* gFullScreenQuadVertexShader = nullptr;
+ID3D11PixelShader*  gTintPostProcess            = nullptr;
+ID3D11PixelShader*  gGreyNoisePostProcess       = nullptr;
+ID3D11PixelShader*  gBurnPostProcess            = nullptr;
+ID3D11PixelShader*  gDistortPostProcess         = nullptr;
+ID3D11PixelShader*  gSpiralPostProcess          = nullptr;
 
 
 //--------------------------------------------------------------------------------------
@@ -64,6 +71,12 @@ bool LoadShaders()
     gCubeMapVertexShader            = LoadVertexShader("CubeMap_vs");
     gCubeMapPixelShader             = LoadPixelShader ("CubeMap_ps");
     gTintPixelShader                = LoadPixelShader ("PixelLightingWithTint_ps");
+    gFullScreenQuadVertexShader     = LoadVertexShader("FullScreenQuad_pp");
+    gTintPostProcess                = LoadPixelShader ("tint_pp");
+    gGreyNoisePostProcess           = LoadPixelShader ("GreyNoise_pp");
+    gBurnPostProcess                = LoadPixelShader ("Burn_pp");
+    gDistortPostProcess             = LoadPixelShader ("Distort_pp");
+    gSpiralPostProcess              = LoadPixelShader ("Spiral_pp");
 
     if (gPixelLightingVertexShader      == nullptr || gPixelLightingPixelShader      == nullptr ||
         gBasicTransformVertexShader     == nullptr || gSkinningVertexShader          == nullptr || 
@@ -73,7 +86,10 @@ bool LoadShaders()
         gNormalMapPixelShader           == nullptr || gParallaxMapPixelShader        == nullptr ||
         gCellShadingOutlineVertexShader == nullptr || gCellShadingOutlinePixelShader == nullptr ||
         gCellShadingPixelShader         == nullptr || gCubeMapVertexShader           == nullptr ||
-        gCubeMapPixelShader             == nullptr || gTintPixelShader               == nullptr)
+        gCubeMapPixelShader             == nullptr || gTintPixelShader               == nullptr ||
+        gFullScreenQuadVertexShader     == nullptr || gTintPostProcess               == nullptr ||
+        gGreyNoisePostProcess           == nullptr || gBurnPostProcess               == nullptr ||
+        gDistortPostProcess             == nullptr || gSpiralPostProcess             == nullptr)
     {
         gLastError = "Error loading shaders";
         return false;
@@ -104,6 +120,8 @@ void ReleaseShaders()
     if (gCubeMapVertexShader)               gCubeMapVertexShader->Release();
     if (gCubeMapPixelShader)                gCubeMapPixelShader->Release();
     if (gTintPixelShader)                   gTintPixelShader->Release();
+
+    if (gFullScreenQuadVertexShader)        gFullScreenQuadVertexShader->Release();
 }
 
 

@@ -78,6 +78,9 @@
     <Filter Include="Math">
       <UniqueIdentifier>{739716ac-bd96-4e4c-b3a2-61c7fdfdea4e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Post Processing Shaders">
+      <UniqueIdentifier>{0f1f3891-96e7-4186-9793-227ad8c18f47}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="Common.hlsli">
@@ -138,6 +141,24 @@
     </FxCompile>
     <FxCompile Include="PixelLightingWithTint_ps.hlsl">
       <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="tint_pp.hlsl">
+      <Filter>Post Processing Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="GreyNoise_pp.hlsl">
+      <Filter>Post Processing Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="Burn_pp.hlsl">
+      <Filter>Post Processing Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="Distort_pp.hlsl">
+      <Filter>Post Processing Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="Spiral_pp.hlsl">
+      <Filter>Post Processing Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="FullScreenQuad_pp.hlsl">
+      <Filter>Post Processing Shaders</Filter>
     </FxCompile>
   </ItemGroup>
 </Project>

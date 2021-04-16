@@ -34,6 +34,13 @@ extern ID3D11VertexShader*   gCubeMapVertexShader;
 extern ID3D11PixelShader*    gCubeMapPixelShader;
 extern ID3D11PixelShader*    gTintPixelShader;
 
+extern ID3D11VertexShader*   gFullScreenQuadVertexShader;
+extern ID3D11PixelShader*    gTintPostProcess;
+extern ID3D11PixelShader*    gGreyNoisePostProcess;
+extern ID3D11PixelShader*    gBurnPostProcess;
+extern ID3D11PixelShader*    gDistortPostProcess;
+extern ID3D11PixelShader*    gSpiralPostProcess;
+
 
 //--------------------------------------------------------------------------------------
 // Shader creation / destruction

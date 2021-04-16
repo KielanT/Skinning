@@ -82,6 +82,12 @@ struct BasicPixelShaderInput
     float4 projectedPosition : SV_Position;
 };
 
+struct PostProcessingInput
+{
+    float4 projectedPosition : SV_Position;
+    float2 uv : uv;
+};
+
 // Data for Normal mapping
 struct NormalMappingPixelShaderInput
 {
@@ -126,9 +132,9 @@ cbuffer PerFrameConstants : register(b0) // The b0 gives this constant buffer th
     float4x4 gViewProjectionMatrix; // The above two matrices multiplied together to combine their effects
 
     float3   gLight1Position; // 3 floats: x, y z
-    float    padding1;        // Pad above variable to float4 (HLSL requirement - copied in the the C++ version of this structure)
+    float    gViewportWidth; // Pad above variable to float4 (HLSL requirement - copied in the the C++ version of this structure)
     float3   gLight1Colour;
-    float    padding2;
+    float    gViewportHeight;
     float3   gLight1Facing;
     float    gLight1CosHalfAngle;
     float4x4 gLight1ViewMatrix;
@@ -212,4 +218,28 @@ cbuffer PerModelConstants : register(b1) // The b1 gives this constant buffer th
     float    padding17;  // See notes on padding in structure above
 
     float4x4 gBoneMatrices[MAX_BONES];
+}
+
+cbuffer PostProcessingConstants : register(b1)
+{
+	// Tint post-process settings
+    float3 gTintColour;
+    float paddingA; // Pad things to collections of 4 floats (see notes in earlier labs to read about padding)
+
+	// Grey noise post-process settings
+    float2 gNoiseScale;
+    float2 gNoiseOffset;
+
+	// Burn post-process settings
+    float gBurnHeight;
+    float3 paddingC;
+
+	// Distort post-process settings
+    float gDistortLevel;
+    float3 paddingD;
+
+	// Spiral post-process settings
+    float gSpiralLevel;
+    float3 paddingE;
+
 }
