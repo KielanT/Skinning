@@ -23,6 +23,7 @@
 #include "Light.h"
 #include "CModel.h"
 #include "CTexture.h"
+#include "Timer.h"
 
 #include <sstream>
 #include <memory>
@@ -105,6 +106,9 @@ float gSpotlightConeAngle = 90.0f;
 // Lock FPS to monitor refresh rate, which will typically set it to 60fps. Press 'p' to toggle to full fps
 bool lockFPS = true;
 
+Timer gBurnTimer;
+int timerTracker = 0;
+bool canChangePostProcess = false;
 
 // Shadow Texture
 int gShadowMapSize = 2048;  // Quality of shadow map
@@ -851,6 +855,7 @@ void RenderScene(float frameTime)
 
     //// Scene completion ////
 
+
     if (gCurrentPostProcess != PostProcess::None)  PostProcessing(frameTime);
 
     // When drawing to the off-screen back buffer is complete, we "present" the image to the front buffer (the screen)
@@ -866,12 +871,32 @@ void RenderScene(float frameTime)
 // Update models and camera. frameTime is the time passed since the last frame
 void UpdateScene(float frameTime)
 {
-    if (KeyHit(Key_1))  gCurrentPostProcess = PostProcess::Tint;
-    if (KeyHit(Key_2))  gCurrentPostProcess = PostProcess::GreyNoise;
-    if (KeyHit(Key_3))  gCurrentPostProcess = PostProcess::Burn;
-    if (KeyHit(Key_4))  gCurrentPostProcess = PostProcess::Distort;
-    if (KeyHit(Key_5))  gCurrentPostProcess = PostProcess::Spiral;
-    if (KeyHit(Key_0))  gCurrentPostProcess = PostProcess::None;
+    
+    if (KeyHit(Key_1)) { gCurrentPostProcess = PostProcess::Tint;      canChangePostProcess = true; }
+    if (KeyHit(Key_2)) { gCurrentPostProcess = PostProcess::GreyNoise; canChangePostProcess = true; }
+    if (KeyHit(Key_3)) { gCurrentPostProcess = PostProcess::Burn;      canChangePostProcess = true; }
+    if (KeyHit(Key_4)) { gCurrentPostProcess = PostProcess::Distort;   canChangePostProcess = true; }
+    if (KeyHit(Key_0)) { gCurrentPostProcess = PostProcess::None;      canChangePostProcess = true; }
+    
+    timerTracker++;
+    if (timerTracker == 1)
+    {
+        gBurnTimer.Start();
+    }
+
+    if (gBurnTimer.GetTime() < 5)
+    {
+        gCurrentPostProcess = PostProcess::Burn;
+    }
+    else
+    {
+        if (!canChangePostProcess)
+        {
+            gCurrentPostProcess = PostProcess::None;
+        }
+    }
+
+    
 
     gCharacters[0]->GetModel()->Control(20, frameTime, Key_0, Key_0, Key_0, Key_0, Key_U, Key_O, Key_I, Key_0); // Wave
     

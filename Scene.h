@@ -23,7 +23,6 @@ bool InitScene();
 // Release the geometry resources created above
 void ReleaseResources();
 
-
 //--------------------------------------------------------------------------------------
 // Scene Render and Update
 //--------------------------------------------------------------------------------------
