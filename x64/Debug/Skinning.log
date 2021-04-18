@@ -1,4 +1,19 @@
-﻿  Main.cpp
+﻿  Camera.cpp
+  CModel.cpp
+  CTexture.cpp
+  Direct3DSetup.cpp
+  Light.cpp
+  Main.cpp
+  CMatrix4x4.cpp
+  CVector2.cpp
+  CVector3.cpp
+  Model.cpp
   Scene.cpp
+  Shader.cpp
+  Mesh.cpp
+  State.cpp
+  Input.cpp
+  GraphicsHelpers.cpp
+  Timer.cpp
   Generating Code...
   Skinning.vcxproj -> D:\Documents\UCLan Year Two\Graphics\Assignment\Skinning\Skinning.exe

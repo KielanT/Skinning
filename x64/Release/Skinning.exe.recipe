@@ -1,0 +1,84 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project>
+  <ProjectOutputs>
+    <ProjectOutput>
+      <FullPath>D:\Documents\UCLan Year Two\Graphics\Assignment\Skinning\Skinning.exe</FullPath>
+    </ProjectOutput>
+  </ProjectOutputs>
+  <ContentFiles>
+    <ContentFile>
+      <FullPath>D:\Documents\UCLan Year Two\Graphics\Assignment\Skinning\Burn_pp.cso</FullPath>
+    </ContentFile>
+    <ContentFile>
+      <FullPath>D:\Documents\UCLan Year Two\Graphics\Assignment\Skinning\CellShadingOutline_ps.cso</FullPath>
+    </ContentFile>
+    <ContentFile>
+      <FullPath>D:\Documents\UCLan Year Two\Graphics\Assignment\Skinning\CellShadingOutline_vs.cso</FullPath>
+    </ContentFile>
+    <ContentFile>
+      <FullPath>D:\Documents\UCLan Year Two\Graphics\Assignment\Skinning\CellShading_ps.cso</FullPath>
+    </ContentFile>
+    <ContentFile>
+      <FullPath>D:\Documents\UCLan Year Two\Graphics\Assignment\Skinning\CubeMap_ps.cso</FullPath>
+    </ContentFile>
+    <ContentFile>
+      <FullPath>D:\Documents\UCLan Year Two\Graphics\Assignment\Skinning\CubeMap_vs.cso</FullPath>
+    </ContentFile>
+    <ContentFile>
+      <FullPath>D:\Documents\UCLan Year Two\Graphics\Assignment\Skinning\DepthOnly_ps.cso</FullPath>
+    </ContentFile>
+    <ContentFile>
+      <FullPath>D:\Documents\UCLan Year Two\Graphics\Assignment\Skinning\Distort_pp.cso</FullPath>
+    </ContentFile>
+    <ContentFile>
+      <FullPath>D:\Documents\UCLan Year Two\Graphics\Assignment\Skinning\FullScreenQuad_pp.cso</FullPath>
+    </ContentFile>
+    <ContentFile>
+      <FullPath>D:\Documents\UCLan Year Two\Graphics\Assignment\Skinning\GreyNoise_pp.cso</FullPath>
+    </ContentFile>
+    <ContentFile>
+      <FullPath>D:\Documents\UCLan Year Two\Graphics\Assignment\Skinning\LightModel_ps.cso</FullPath>
+    </ContentFile>
+    <ContentFile>
+      <FullPath>D:\Documents\UCLan Year Two\Graphics\Assignment\Skinning\BasicTransform_vs.cso</FullPath>
+    </ContentFile>
+    <ContentFile>
+      <FullPath>D:\Documents\UCLan Year Two\Graphics\Assignment\Skinning\NormalMapping_vs.cso</FullPath>
+    </ContentFile>
+    <ContentFile>
+      <FullPath>D:\Documents\UCLan Year Two\Graphics\Assignment\Skinning\NormalMap_ps.cso</FullPath>
+    </ContentFile>
+    <ContentFile>
+      <FullPath>D:\Documents\UCLan Year Two\Graphics\Assignment\Skinning\ParallaxMapping_ps.cso</FullPath>
+    </ContentFile>
+    <ContentFile>
+      <FullPath>D:\Documents\UCLan Year Two\Graphics\Assignment\Skinning\PixelLightingWithTint_ps.cso</FullPath>
+    </ContentFile>
+    <ContentFile>
+      <FullPath>D:\Documents\UCLan Year Two\Graphics\Assignment\Skinning\PixelLighting_ps.cso</FullPath>
+    </ContentFile>
+    <ContentFile>
+      <FullPath>D:\Documents\UCLan Year Two\Graphics\Assignment\Skinning\PixelLighting_vs.cso</FullPath>
+    </ContentFile>
+    <ContentFile>
+      <FullPath>D:\Documents\UCLan Year Two\Graphics\Assignment\Skinning\Skinning_vs.cso</FullPath>
+    </ContentFile>
+    <ContentFile>
+      <FullPath>D:\Documents\UCLan Year Two\Graphics\Assignment\Skinning\Spiral_pp.cso</FullPath>
+    </ContentFile>
+    <ContentFile>
+      <FullPath>D:\Documents\UCLan Year Two\Graphics\Assignment\Skinning\TextureAlpha_ps.cso</FullPath>
+    </ContentFile>
+    <ContentFile>
+      <FullPath>D:\Documents\UCLan Year Two\Graphics\Assignment\Skinning\TextureFade_ps.cso</FullPath>
+    </ContentFile>
+    <ContentFile>
+      <FullPath>D:\Documents\UCLan Year Two\Graphics\Assignment\Skinning\tint_pp.cso</FullPath>
+    </ContentFile>
+    <ContentFile>
+      <FullPath>D:\Documents\UCLan Year Two\Graphics\Assignment\Skinning\WiggleShader_vs.cso</FullPath>
+    </ContentFile>
+  </ContentFiles>
+  <SatelliteDlls />
+  <NonRecipeFileRefs />
+</Project>

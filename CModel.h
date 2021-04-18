@@ -1,10 +1,15 @@
 #pragma once
+
+// Includes required
 #include "Mesh.h"
 #include "Model.h"
 #include "CTexture.h"
 #include "GraphicsHelpers.h"
 
-enum class EBlendType : int
+// Class has some bugs so may not always be the best to use it
+// -- Texture array doesn't work properly (For two textures, you need an array size of 3 because it skips the second element in the array)
+
+enum class EBlendType : int // Enum blend class (public but can only be accessed if this class as been included)
 {
 	NoBlend = 1,
 	Additive = 2,
@@ -12,14 +17,14 @@ enum class EBlendType : int
 	Alpha = 4
 };
 
-enum class ECullType : int
+enum class ECullType : int // Enum Cull class (public but can only be accessed if this class as been included)
 {
 	Back = 1,
 	Front = 2,
 	None = 3
 };
 
-enum class ESamplerType : int
+enum class ESamplerType : int // Enum Sampler class (public but can only be accessed if this class as been included)
 {
 	Point = 1,
 	Trilinear = 2,
@@ -30,26 +35,27 @@ enum class ESamplerType : int
 class CModel
 {
 private: 
-	std::string mName;
-	Mesh* mMesh;
-	Model* mModel;
-	std::string mTexture;
-	std::vector<std::string> mTextures;
+	std::string mName; // If there is an array of a specific type of model then you can indivdually set the names to keep track of them (if needed)
+	Mesh* mMesh; // Used for setting the mesh
+	Model* mModel; // Used for setting the mode
+	std::string mTexture; // Used for setting one texture
+	std::vector<std::string> mTextures; // Used for setting an array of textures
 
-	ID3D11VertexShader* mVertexShader;
-	ID3D11PixelShader* mPixelShader;
+	ID3D11VertexShader* mVertexShader; // Used for setting the vertex shader
+	ID3D11PixelShader* mPixelShader; // Used for setting the pixel shader
 
-	ID3D11BlendState* mBlendState;
-	ID3D11DepthStencilState* mDepthStencilState;
-	ID3D11RasterizerState* mRasterizerState;
+	ID3D11BlendState* mBlendState; // Used for setting blend state
+	ID3D11DepthStencilState* mDepthStencilState; // Used for setting Depth stencil state
+	ID3D11RasterizerState* mRasterizerState; // Used for setting cull state
 
-	ID3D11Resource* mDiffuseMap;
-	ID3D11ShaderResourceView* mDiffuseMapSRV;
-	ID3D11SamplerState* mSamplerState;
+	ID3D11Resource* mDiffuseMap; // Used for setting the resource map
+	ID3D11ShaderResourceView* mDiffuseMapSRV;  // Used for setting the resource srv
+	ID3D11SamplerState* mSamplerState; // Used for setting sampler state
 
-	std::vector<ID3D11ShaderResourceView*> mDiffusesMapSRVs;
+	std::vector<ID3D11ShaderResourceView*> mDiffusesMapSRVs; // Used for setting an array of diffuse maps
 
 public:
+	// Constructors
 	CModel();
 	CModel(Mesh* mesh);
 	CModel(Mesh* mesh, std::string texture);
@@ -57,7 +63,7 @@ public:
 	CModel(std::string texture);
 	CModel(std::vector<std::string> textures);
 	CModel(CTexture* texture);
-	~CModel();
+	~CModel(); // Deconstructors
 
 	// Setters
 	void SetName(std::string name) { mName = name; }
@@ -71,14 +77,6 @@ public:
 		mMesh = mesh;
 		mModel = new Model(mMesh);
 	}
-	//void SetMesh(Mesh* mesh, bool requireTangent = false)
-	//{
-	//	delete mMesh;
-	//	delete mModel;
-	//	mMesh = mesh;
-	//	mModel = new Model(mMesh);
-	//}
-
 
 	void SetShaders(ID3D11VertexShader* vs, ID3D11PixelShader* ps)
 	{
@@ -108,10 +106,12 @@ public:
 	Model* GetModel() { return mModel; }
 	std::string GetName() { return mName; }
 
-	void Render();
+	
+	void Render(); // Render Function
 
 private:
 
+	// Private setter functions (Used for rendering)
 	void mSetShaders(ID3D11VertexShader* vs, ID3D11PixelShader* ps)
 	{
 		gD3DContext->VSSetShader(vs, nullptr, 0);
@@ -149,6 +149,7 @@ private:
 
 	void SetSampler(ID3D11SamplerState* state) { gD3DContext->PSSetSamplers(0, 1, &state); }
 
+	// Used for loading an array of functions
 	void LoadAllTextures(std::vector<std::string> textures);
 
 	

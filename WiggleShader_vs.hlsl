@@ -1,5 +1,6 @@
 #include "Common.hlsli"
 
+// Wiggle vertex shader
 
 LightingPixelShaderInput main(BasicVertex modelVertex)
 {
@@ -15,8 +16,8 @@ LightingPixelShaderInput main(BasicVertex modelVertex)
     
     output.uv = modelVertex.uv;
     
-
-    worldPosition.x += sin(modelPosition.y + gWiggle / 6) * 1.1f;
+    // Moves the vertices depending on the wiggle variable                                
+    worldPosition.x += sin(modelPosition.y + gWiggle / 6) * 1.1f; // Divides wiggle by 6 for the speed. * by 1.1 for the object scale
     worldPosition.y += sin(modelPosition.x + gWiggle / 6) * 1.1f;
     
     float4 viewPosition = mul(gViewMatrix, worldPosition);

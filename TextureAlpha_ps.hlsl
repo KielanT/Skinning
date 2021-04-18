@@ -1,5 +1,7 @@
 #include "Common.hlsli"
 
+// Alpha shader (removes pixels to create a see through effect around a texture)
+
 Texture2D DiffuseMap : register(t0);
 SamplerState TexSampler : register(s0);
 

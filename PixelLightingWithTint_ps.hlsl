@@ -335,7 +335,7 @@ float4 main(LightingPixelShaderInput input) : SV_Target
 
     // Combine lighting with texture colours
     float3 finalColour = diffuseLight * diffuseMaterialColour + specularLight * specularMaterialColour;
-    finalColour *= gObjectColour;
+    finalColour *= gObjectColour; // Tints the colour of the object
    
 
     return float4(finalColour, 1.0f); // Always use 1.0f for output alpha - no alpha blending in this lab

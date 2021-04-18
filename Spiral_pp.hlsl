@@ -1,9 +1,6 @@
-//--------------------------------------------------------------------------------------
-// Colour Tint Post-Processing Pixel Shader
-//--------------------------------------------------------------------------------------
-// Just samples a pixel from the scene texture and multiplies it by a fixed colour to tint the scene
-
 #include "Common.hlsli"
+
+// Post process shader that spirals ( Doesn't work)
 Texture2D SceneTexture : register(t0);
 SamplerState PointSample : register(s0); 
 
@@ -19,7 +16,7 @@ float4 main(PostProcessingInput input) : SV_Target
     matrix<float, 2, 2> rot2D =
     {
         c, s,
-	                           -s, c /*FILTER - not 0, it's a 2D rotation matrix...?*/
+	   -s, c /*FILTER - not 0, it's a 2D rotation matrix...?*/
     };
     float2 rotatedOffsetUV = mul(centreOffsetUV, rot2D);
     

@@ -73,7 +73,7 @@ struct PerFrameConstants
     float      light1CosHalfAngle;
     CMatrix4x4 light1ViewMatrix;
     CMatrix4x4 light1ProjectionMatrix;
-    int        light1Type;
+    int        light1Type; // Used for setting the light type
     CVector3   padding3;
 
     CVector3   light2Position;
@@ -126,13 +126,13 @@ struct PerFrameConstants
     CVector3   cameraPosition;
     float      frameTime;
 
-    float      wiggle;
-    float      parallaxDepth;
-    float      pad;
+    float      wiggle; // Used for controlling the wiggle variable C++ (CPU) side
+    float      parallaxDepth; // Used for setting the parallx depth  C++ (CPU) side
+    float      pad; // Padding variables (hlsl requires everything to be grouped in fours otherwise there is weird graphical errors
     float      pad2;
 
     CVector3   outlineColour;    // Cell shading outline colour
-    float      outlineThickness;
+    float      outlineThickness; // Cell shading outline thickness
 };
 
 extern PerFrameConstants gPerFrameConstants;      // This variable holds the CPU-side constant buffer described above
@@ -154,11 +154,11 @@ struct PerModelConstants
 extern PerModelConstants gPerModelConstants;      // This variable holds the CPU-side constant buffer described above
 extern ID3D11Buffer*     gPerModelConstantBuffer; // This variable controls the GPU-side constant buffer related to the above structure
 
-struct PostProcessingConstants
+struct PostProcessingConstants // From future module (post processing lab)
 {
     // Tint post-process settings
     CVector3 tintColour;
-    float    paddingA;  // Pad things to collections of 4 floats (see notes in earlier labs to read about padding)
+    float    paddingA;  
 
     // Grey noise post-process settings
     CVector2 noiseScale;

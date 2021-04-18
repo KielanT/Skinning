@@ -1,5 +1,7 @@
 #include "Common.hlsli"
 
+// Texture fade pixel shader (fades between textures and applies lighting with a shadow map)
+
 Texture2D DiffuseMapOne : register(t0);
 Texture2D DiffuseMapTwo : register(t2);
 Texture2D ShadowMapLight1 : register(t1); 
@@ -311,11 +313,11 @@ float4 main(LightingPixelShaderInput input) : SV_Target
     float4 TextureOne = DiffuseMapOne.Sample(TexSampler, input.uv);
     float4 TextureTwo = DiffuseMapTwo.Sample(TexSampler2, input.uv);
     
-    float t = frac(gWiggle);
-    float3 diffuseMaterialColour = lerp(TextureOne.rgb, TextureTwo.rgb, t);
+    float t = frac(gWiggle); // Sets the variable between 0 and 1
+    float3 diffuseMaterialColour = lerp(TextureOne.rgb, TextureTwo.rgb, t); // Lerps between the textures based on the wiggle variable
     float specularMaterialColour = lerp(TextureOne.a, TextureTwo.a, t);
     
-    float3 finalColour = diffuseLight * diffuseMaterialColour + specularLight * specularMaterialColour;
+    float3 finalColour = diffuseLight * diffuseMaterialColour + specularLight * specularMaterialColour; // Outputs lighting and the texture
     
     return float4(finalColour, 1.0f);
 }

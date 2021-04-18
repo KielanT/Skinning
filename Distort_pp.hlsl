@@ -1,16 +1,17 @@
 #include "Common.hlsli"
 
-Texture2D SceneTexture : register(t0);
-SamplerState PointSample : register(s0); 
+// Distort post process shader
 
-Texture2D DistortMap : register(t1);
+Texture2D SceneTexture : register(t0);  // Takes the scene texture
+SamplerState PointSample : register(s0); 
+ 
+Texture2D DistortMap : register(t1); // Takes the distort map
 SamplerState TrilinearWrap : register(s1);
 
 float4 main(PostProcessingInput input) : SV_Target
 {
     const float lightStrength = 0.015f;
 	
-
     float3 distortTexture = DistortMap.Sample(TrilinearWrap, input.uv).rgb;
 
     float2 distortVector = distortTexture.rg/*FILTER - not 0, similar to crinkle vector used in burn shader above*/;

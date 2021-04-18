@@ -1,30 +1,30 @@
+// Includes Required
 #include "CModel.h"
 #include "Shader.h"
 #include "State.h"
 
 
-
-CModel::CModel()
+CModel::CModel() //Default Constructer that sets
 {
-	mName = "none";
+	mName = "none"; // Sets default name
 
-	mMesh = new Mesh("Cube.x");
-	mModel = new Model(mMesh);
+	mMesh = new Mesh("Cube.x");  // Creates default Model
+	mModel = new Model(mMesh);	 // Creates default Model
 
-	mVertexShader = gPixelLightingVertexShader;
-	mPixelShader = gPixelLightingPixelShader;
+	mVertexShader = gPixelLightingVertexShader; // Sets default Vertex Shader
+	mPixelShader = gPixelLightingPixelShader; // Sets default pixel Shader
 
-	mBlendState = gNoBlendingState;
-	mDepthStencilState = gUseDepthBufferState;
-	mRasterizerState = gCullBackState;
+	mBlendState = gNoBlendingState;				// Sets default blend State
+	mDepthStencilState = gUseDepthBufferState;  // Sets default depth stencil State
+	mRasterizerState = gCullBackState;			// Sets default culling
 
-	LoadTexture("DefaultTexture.jpg", &mDiffuseMap, &mDiffuseMapSRV);
-	mSamplerState = gAnisotropic4xSampler;
+	LoadTexture("DefaultTexture.jpg", &mDiffuseMap, &mDiffuseMapSRV); // Sets default texture
+	mSamplerState = gAnisotropic4xSampler; // Sets default sampler state
 
-	SetPosition({ 0, 10, 0 });
+	SetPosition({ 0, 10, 0 }); // Sets default Position
 }
 
-CModel::CModel(Mesh* mesh)
+CModel::CModel(Mesh* mesh) // Contructors that sets a mesh
 {
 	mName = "none";
 
@@ -44,7 +44,7 @@ CModel::CModel(Mesh* mesh)
 	SetPosition({ 0, 10, 0 });
 }
 
-CModel::CModel(Mesh* mesh, std::string texture)
+CModel::CModel(Mesh* mesh, std::string texture) // Constructor that sets the mesh and texture
 {
 	mName = "none";
 
@@ -64,7 +64,7 @@ CModel::CModel(Mesh* mesh, std::string texture)
 	SetPosition({ 0, 10, 0 });
 }
 
-CModel::CModel(Mesh* mesh, std::vector<std::string> textures)
+CModel::CModel(Mesh* mesh, std::vector<std::string> textures) // Sets mesh and an array of textures
 {
 	mName = "none";
 
@@ -84,7 +84,7 @@ CModel::CModel(Mesh* mesh, std::vector<std::string> textures)
 	SetPosition({ 0, 10, 0 });
 }
 
-CModel::CModel(std::string texture)
+CModel::CModel(std::string texture) // Sets texture using the file name
 {
 	mName = "none";
 
@@ -105,7 +105,7 @@ CModel::CModel(std::string texture)
 
 }
 
-CModel::CModel(CTexture* texture)
+CModel::CModel(CTexture* texture) // Sets a CTexture 
 {
 	mName = "none";
 
@@ -126,7 +126,7 @@ CModel::CModel(CTexture* texture)
 }
 
 
-CModel::CModel(std::vector<std::string> textures)
+CModel::CModel(std::vector<std::string> textures) // Set array of textures that saws the file name
 {
 	mName = "none";
 
@@ -145,7 +145,7 @@ CModel::CModel(std::vector<std::string> textures)
 
 }
 
-CModel::~CModel()
+CModel::~CModel() // Deletes everything
 {
 	delete mMesh;
 	delete mModel;
@@ -164,19 +164,19 @@ CModel::~CModel()
 	}
 }
 
-void CModel::SetMesh(std::string mesh, bool requireTangent)
+void CModel::SetMesh(std::string mesh, bool requireTangent) // Sets The mesh, and if the tangent is required or not
 {
-	delete mMesh;
-	delete mModel;
-	mMesh = new Mesh(mesh, requireTangent);
-	mModel = new Model(mMesh);
+	delete mMesh; // Deletes previous mesh
+	delete mModel; // Deletes previous model
+	mMesh = new Mesh(mesh, requireTangent); // Sets the mesh
+	mModel = new Model(mMesh); // Creates the model
 }
 
-void CModel::SetBlendType(EBlendType type)
+void CModel::SetBlendType(EBlendType type) // Sets the blend type using an enum class
 {
 	if (type == EBlendType::NoBlend)
 	{
-		mBlendState = gNoBlendingState;
+		mBlendState = gNoBlendingState; 
 		mDepthStencilState = gUseDepthBufferState;
 	}
 	else if (type == EBlendType::Additive)
@@ -196,23 +196,23 @@ void CModel::SetBlendType(EBlendType type)
 	}
 }
 
-void CModel::SetCull(ECullType type)
-{
-	if (type == ECullType::Back)
+void CModel::SetCull(ECullType type) // Sets the cull state using enum class
+{ 
+	if (type == ECullType::Back) // Shows the back side of the triangles (
 	{
 		mRasterizerState = gCullBackState;
 	}
-	else if (type == ECullType::Front)
+	else if (type == ECullType::Front) // Shows the front side of the triangles (inside out)
 	{
 		mRasterizerState = gCullFrontState;
 	}
-	else if (type == ECullType::None)
+	else if (type == ECullType::None) // Shows all sides of the triangles
 	{
 		mRasterizerState = gCullNoneState;
 	}
 }
 
-void CModel::SetSampler(ESamplerType type)
+void CModel::SetSampler(ESamplerType type) // Sets the sampler type using enum class
 {
 	if (type == ESamplerType::Point)
 	{
@@ -228,7 +228,7 @@ void CModel::SetSampler(ESamplerType type)
 	}
 }
 
-void CModel::Render()
+void CModel::Render() // Renders everything with the correct settings
 {
 	mSetVSShader(mVertexShader);
 	
@@ -251,7 +251,7 @@ void CModel::Render()
 	mModel->Render(); // Render
 }
 
-void CModel::LoadAllTextures(std::vector<std::string> textures)
+void CModel::LoadAllTextures(std::vector<std::string> textures) // Function to load all the textures in an array
 {
 	for (int i = 0; i < textures.size(); ++i)
 	{

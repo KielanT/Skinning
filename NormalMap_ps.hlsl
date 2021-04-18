@@ -1,6 +1,5 @@
 #include "Common.hlsli" 
 
-
 Texture2D DiffuseSpecularMap : register(t0); 
 Texture2D NormalMap : register(t2);
 SamplerState TexSampler : register(s0); 

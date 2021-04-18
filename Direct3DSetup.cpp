@@ -44,7 +44,7 @@ bool InitDirect3D()
     // Create a Direct3D device (i.e. initialise D3D) and create a swap-chain (create a back buffer to render to)
     DXGI_SWAP_CHAIN_DESC swapDesc = {};
     swapDesc.OutputWindow = gHWnd;   // Target window
-    swapDesc.SwapEffect = DXGI_SWAP_EFFECT_SEQUENTIAL;
+    swapDesc.SwapEffect = DXGI_SWAP_EFFECT_SEQUENTIAL; // Using for swaping postproccessing effects with a blur 
     swapDesc.Windowed = TRUE;
     swapDesc.BufferCount = 1;
     swapDesc.BufferDesc.Width  = gViewportWidth;             // Target window size
@@ -118,6 +118,7 @@ bool InitDirect3D()
         return false;
     }
     
+    // Throws an error cannot create the depth buffer for some reason
     //D3D11_SHADER_RESOURCE_VIEW_DESC descSRV;
     //descSRV.Format = DXGI_FORMAT_R32_FLOAT;
     //descSRV.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
@@ -145,7 +146,6 @@ void ShutdownDirect3D()
         gD3DContext->ClearState(); // This line is also needed to reset the GPU before shutting down DirectX
         gD3DContext->Release();
     }
-    if (gDepthShaderView)        gDepthShaderView->Release();
     if (gDepthShaderView)        gDepthShaderView->Release();
     if (gDepthStencil)           gDepthStencil->Release();
     if (gDepthStencilTexture)    gDepthStencilTexture->Release();

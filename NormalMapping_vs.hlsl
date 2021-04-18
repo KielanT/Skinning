@@ -1,6 +1,6 @@
-
-
 #include "Common.hlsli" 
+
+// Normal mapping shader 
 
 NormalMappingPixelShaderInput main(TangentVertex modelVertex)
 {

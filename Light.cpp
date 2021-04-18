@@ -4,39 +4,39 @@
 #include "State.h"
 #include "Direct3DSetup.h"
 
-#include <sstream>
 
-Light::Light()
+Light::Light() // Constructer that sets up the lights
 {
-	mMesh = new Mesh("Light.x");
-	mModel = new Model(mMesh); // SetModel
-	Colour = { 0.8f, 0.8f, 1.0f };// SetColour
-	Strength = 40; // SetStrength
-	mModel->SetPosition({ 0, 10, 0 }); // SetModelPos
-	mModel->SetScale(pow(Strength, 0.7f));// SetModelScale
-	LoadTexture("Flare.jpg", &mLightDiffuseMap, &mLightDiffuseMapSRV);
-	mSpotlightConeAngle = 90;
+	mMesh = new Mesh("Light.x"); // Sets the default light mesh
+	mModel = new Model(mMesh); // Set Model
+	Colour = { 0.8f, 0.8f, 1.0f };// Set Colour
+	Strength = 40; // Set Strength
+	mModel->SetPosition({ 0, 10, 0 }); // Set ModelPos
+	mModel->SetScale(pow(Strength, 0.7f));// SetModel Scale
+	LoadTexture("Flare.jpg", &mLightDiffuseMap, &mLightDiffuseMapSRV); // Sets the texture
+	mSpotlightConeAngle = 90; // Sets the default cone angle
 
-	mLightColour = Colour * Strength;
-	mLightPosition = mModel->Position();
+	// Sets the default lighting data
+	mLightColour = Colour * Strength; 
+	mLightPosition = mModel->Position(); 
 	mLightFacing = Normalise(mModel->WorldMatrix().GetZAxis());
 	mLightCosHalfAngle = cos(ToRadians(mSpotlightConeAngle / 2));
 	mLightViewMatrix = CalculateLightViewMatrix();
 	mLightProjectionMatrix = CalculateLightProjectionMatrix();
-	mLightType = 0;
-	mEffectType = 0;
+	mLightType = 0; // Sets default light type
+	mEffectType = 0; // Sets default effect type
 }
 
-Light::~Light()
+Light::~Light() // Deletes everything
 {
-	delete mMesh;	mMesh = nullptr;
+	delete mMesh;	mMesh = nullptr; 
 	delete mModel;	mModel = nullptr;
 
 	if (mLightDiffuseMap)		mLightDiffuseMap->Release();
 	if (mLightDiffuseMapSRV)	mLightDiffuseMapSRV->Release();
 }
 
-void Light::RenderLightFromCamera()
+void Light::RenderLightFromCamera() // Renders the lights from the camera
 {
 	gD3DContext->VSSetShader(gBasicTransformVertexShader, nullptr, 0); // VS Shader
 	gD3DContext->PSSetShader(gLightModelPixelShader, nullptr, 0); // PS Shader
@@ -44,15 +44,15 @@ void Light::RenderLightFromCamera()
 	gD3DContext->PSSetShaderResources(0, 1, &mLightDiffuseMapSRV); // PS Shader Resources
 	gD3DContext->PSSetSamplers(0, 1, &gAnisotropic4xSampler); // PS Sampler
 
-	gD3DContext->OMSetBlendState(gAdditiveBlendingState, nullptr, 0xffffff); // SetBlendState
-	gD3DContext->OMSetDepthStencilState(gDepthReadOnlyState, 0);// SetDepthStencil
+	gD3DContext->OMSetBlendState(gAdditiveBlendingState, nullptr, 0xffffff); // Set BlendState
+	gD3DContext->OMSetDepthStencilState(gDepthReadOnlyState, 0);// Set DepthStencil
 	gD3DContext->RSSetState(gCullNoneState); // Set Cull State
 
 	gPerModelConstants.objectColour = Colour; // SetColour
 	mModel->Render(); // Render
 }
 
-void Light::RenderDepthBufferFromLight()
+void Light::RenderDepthBufferFromLight()  // Renders the light from the depth buffer
 {
 	// Get camera-like matrices from the spotlight, seet in the constant buffer and send over to GPU
 	gPerFrameConstants.viewMatrix = CalculateLightViewMatrix();
@@ -82,12 +82,12 @@ void Light::RenderDepthBufferFromLight()
 
 
 
-void Light::UpdateScene(float frameTime, Model* modelToObit)
+void Light::UpdateScene(float frameTime, Model* modelToObit) // If the light has an effect then this gets called in update scene 
 {
 	const float gLightOrbit = 20.0f;
 	const float gLightOrbitSpeed = 0.7f;
 	// LightControls
-	if (mEffectType == 1)
+	if (mEffectType == 1) // Obit effect
 	{
 		static float rotate = 0.0f;
 		static bool go = true;
@@ -95,7 +95,7 @@ void Light::UpdateScene(float frameTime, Model* modelToObit)
 		if (go)  rotate -= gLightOrbitSpeed * frameTime;
 		if (KeyHit(Key_1))  go = !go;
 	}
-	else if (mEffectType == 2)
+	else if (mEffectType == 2) // Pulsating effect
 	{
 		if (Strength >= 0.0f && Strength <= 30)
 		{
@@ -108,7 +108,7 @@ void Light::UpdateScene(float frameTime, Model* modelToObit)
 			SetLightColour(Colour);
 		}
 	}
-	else if (mEffectType == 3)
+	else if (mEffectType == 3) // Colour changing effect
 	{
 		if (Colour.z >= 0 && Colour.z <= 1)
 		{
@@ -152,13 +152,14 @@ void Light::UpdateScene(float frameTime, Model* modelToObit)
 }
 
 
-void Light::Render()
+void Light::Render() // Renders the light
 {
 	mModel->Render();
 }
 
-CMatrix4x4 Light::CalculateLightViewMatrix()
-{
+// Light helper functions
+CMatrix4x4 Light::CalculateLightViewMatrix() 
+{ 
 	return InverseAffine(mModel->WorldMatrix());
 }
 

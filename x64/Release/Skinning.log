@@ -1,3 +1,23 @@
-﻿D:\Documents\UCLan Year Two\Graphics\Assignment\Skinning\CellShading_ps.hlsl(100,32): error X5589: Invalid const register num: 62. Max allowed is 31.
-  
-  compilation failed; no code produced
+﻿  Camera.cpp
+  CModel.cpp
+  CTexture.cpp
+  Direct3DSetup.cpp
+  Light.cpp
+  Main.cpp
+  CMatrix4x4.cpp
+  CVector2.cpp
+  CVector3.cpp
+  Model.cpp
+  Scene.cpp
+  Shader.cpp
+  Mesh.cpp
+  State.cpp
+  Input.cpp
+  GraphicsHelpers.cpp
+  Timer.cpp
+  Generating code
+  0 of 919 functions ( 0.0%) were compiled, the rest were copied from previous compilation.
+    0 functions were new in current compilation
+    0 functions had inline decision re-evaluated but remain unchanged
+  Finished generating code
+  Skinning.vcxproj -> D:\Documents\UCLan Year Two\Graphics\Assignment\Skinning\Skinning.exe

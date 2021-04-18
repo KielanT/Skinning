@@ -35,7 +35,7 @@
 // Addition of Mesh, Model and Camera classes have greatly simplified this section
 // Geometry data has gone to Mesh class. Positions, rotations, matrices have gone to Model and Camera classes
 
-// Post Processing types
+// Post Processing types (From future module (post processing lab)
 enum class PostProcess
 {
     None,
@@ -59,9 +59,11 @@ Camera* gCamera;
 const int NUM_CHARACTERS = 1;
 const int NUM_CUBES = 5;
 
-CModel* gCharacters[NUM_CHARACTERS];
-CModel* gCubes[NUM_CUBES];
+// Creates models using my class
+CModel* gCharacters[NUM_CHARACTERS]; // An arry of characters
+CModel* gCubes[NUM_CUBES]; // An array of cubes (demostrating different effects and graphic techniques)
 
+// Individual models
 CModel* gCrate;
 CModel* gGround;
 CModel* gFloor;
@@ -79,7 +81,7 @@ Model* gNormalMapCube;
 Model* gParallaxTeapot;
 Model* gTroll;
 
-Model* gSkyBox;
+Model* gSkyBox; // Attempt at doing cube mapping through shaders/through code
 
 // I made a cube in blender, UV unwrapped it and set up cube mapping in there instead of code
 Mesh*  gMySkyBoxMesh;
@@ -106,6 +108,7 @@ float gSpotlightConeAngle = 90.0f;
 // Lock FPS to monitor refresh rate, which will typically set it to 60fps. Press 'p' to toggle to full fps
 bool lockFPS = true;
 
+// Used for creating an intro effect using the post processing effects
 Timer gBurnTimer;
 int timerTracker = 0;
 bool canChangePostProcess = false;
@@ -139,7 +142,7 @@ ID3D11Buffer* gPostProcessingConstantBuffer;
 // Textures
 //--------------------------------------------------------------------------------------
 
-// DirectX objects controlling textures used in this lab
+// Textures using my class
 CTexture* gTrollTexture;
 CTexture* gManTexture;
 CTexture* gPatternTexture;
@@ -148,10 +151,7 @@ CTexture* gPatternHeightTexture;
 CTexture* gCubeMapTexture;
 CTexture* gSkyBoxTexture;
 
-float gParallaxDepth = 0.3f;
-
 // Post Processing textures
-
 ID3D11Texture2D* gSceneTexture = nullptr;
 ID3D11RenderTargetView* gSceneRenderTarget = nullptr;
 ID3D11ShaderResourceView* gSceneTextureSRV = nullptr;
@@ -166,6 +166,8 @@ ID3D11Resource* gBurnMap = nullptr;
 ID3D11ShaderResourceView* gBurnMapSRV = nullptr;
 ID3D11Resource* gDistortMap = nullptr;
 ID3D11ShaderResourceView* gDistortMapSRV = nullptr;
+
+float gParallaxDepth = 0.3f;
 
 //--------------------------------------------------------------------------------------
 // Initialise scene geometry, constant buffers and states
@@ -333,7 +335,7 @@ bool InitGeometry()
 bool InitScene()
 {
     //// Set up scene ////
-    for (int i = 0; i < NUM_CHARACTERS; ++i)
+    for (int i = 0; i < NUM_CHARACTERS; ++i) // Create an array of characters (only one in our case
     {
         gCharacters[i] = new CModel(gManTexture);
         gCharacters[i]->SetMesh("Man.x");
@@ -350,6 +352,7 @@ bool InitScene()
     gCharacters[0]->SetRotation({ ToRadians(0), ToRadians(-50), ToRadians(70) }, 7); // Right Hand
     gCharacters[0]->SetRotation({ ToRadians(-90), ToRadians(0), ToRadians(0) }, 19); // Left Upper Arm
 
+    // Create model using my class
     gGround = new CModel("GrassDiffuseSpecular.dds");
     gGround->SetMesh("Hills.x");
     gCrate = new CModel("CargoA.dds");
@@ -371,11 +374,12 @@ bool InitScene()
     gSphere->SetPosition({ -320, 10, 30 });
     gSphere->SetScale(.5f);
 
+    // Create all the cube models using the default data
     for (int i = 0; i < NUM_CUBES; ++i)
     {
         gCubes[i] = new CModel();
     }
-
+    // Set the individual cube setting if needed
     std::vector<std::string> cubeTextures;
     cubeTextures.push_back("Wood2.jpg");
     cubeTextures.push_back("Flare.jpg"); // For some reason it skips over the second one so it needs to have three textures
@@ -400,6 +404,7 @@ bool InitScene()
     gCubes[4]->SetPosition({ -320, 10, 140 });
     gCubes[4]->SetName("Moogle Cube");
 
+    // Create models not using my class
     gNormalMapCube = new Model(gCubeMesh); 
     gNormalMapCube->SetPosition({ -320, 10, 160 });
 
@@ -411,7 +416,7 @@ bool InitScene()
     gTroll->SetRotation({ 0, -80, 0 });
     gTroll->SetScale(4.0f);
 
-    gMyCar = new CModel("CarTexture.png");
+    gMyCar = new CModel("CarTexture.png"); // Creates a model that I made myself
     gMyCar->SetMesh("MyCar.fbx");
     gMyCar->SetPosition({ -320, 0, 200 });
     gMyCar->SetRotation({ 0, 200, 0 });
@@ -420,7 +425,7 @@ bool InitScene()
     gSkyBox = new Model(gSphereMesh);
     gSkyBox->SetPosition({ 0, 0, 0 });
 
-    gMySkyBox = new Model(gMySkyBoxMesh);
+    gMySkyBox = new Model(gMySkyBoxMesh); // Demostation of a sky box as a model 
     gMySkyBox->SetScale(0.1f);
     //gMySkyBox->SetScale(10.0f); // For use as a skybox
     gMySkyBox->SetPosition({ -320, 10, -60 });
@@ -431,7 +436,7 @@ bool InitScene()
     {
         gLight[i] = new Light();
     }
-    
+    // Sets individual light settings
     gLight[0]->SetStrength(10);
     gLight[0]->SetPosition({ 30, 10, 0 });
     gLight[0]->SetType(1);
@@ -491,18 +496,18 @@ void ReleaseResources()
     {
         delete gLight[i];  gLight[i] = nullptr;
     }
-    delete gCamera;           gCamera           = nullptr;
-    delete gNormalMapCube;    gNormalMapCube    = nullptr;
-    delete gParallaxTeapot;   gParallaxTeapot   = nullptr;
-    delete gTroll;            gTroll            = nullptr;
-    delete gSkyBox;           gSkyBox           = nullptr;
+    delete gCamera;                 gCamera           = nullptr;
+    delete gNormalMapCube;          gNormalMapCube    = nullptr;
+    delete gParallaxTeapot;         gParallaxTeapot   = nullptr;
+    delete gTroll;                  gTroll            = nullptr;
+    delete gSkyBox;                 gSkyBox           = nullptr;
 
-    delete gCubeMesh;         gCubeMesh         = nullptr;
-    delete gTeapotMesh;       gTeapotMesh       = nullptr;
-    delete gTrollMesh;        gTrollMesh        = nullptr;
-
-    delete gMySkyBox;       gMySkyBox = nullptr;
-    delete gMySkyBoxMesh;   gMySkyBoxMesh = nullptr;
+    delete gCubeMesh;               gCubeMesh         = nullptr;
+    delete gTeapotMesh;             gTeapotMesh       = nullptr;
+    delete gTrollMesh;              gTrollMesh        = nullptr;
+    delete gMySkyBox;               gMySkyBox         = nullptr;
+    delete gMySkyBoxMesh;           gMySkyBoxMesh     = nullptr;
+    delete gSphereMesh;             gSphereMesh       = nullptr;
 }
 
 //--------------------------------------------------------------------------------------
@@ -545,7 +550,8 @@ void RenderSceneFromCamera(Camera* camera)
     gMyCar->SetCull(ECullType::None);
     gMyCar->Render();
 
-    gCubes[0]->SetPSShader(gTextureFadePixelShader);
+    // Set cubes up
+    gCubes[0]->SetPSShader(gTextureFadePixelShader); 
 
     // Render Additive cube
     gCubes[1]->SetVSShader(gBasicTransformVertexShader);
@@ -570,11 +576,12 @@ void RenderSceneFromCamera(Camera* camera)
     gCubes[4]->SetBlendType(EBlendType::Alpha);
     gCubes[4]->SetCull(ECullType::None);
 
-    for (int i = 0; i < NUM_CUBES; ++i)
+    for (int i = 0; i < NUM_CUBES; ++i) // Render all cubes
     {
         gCubes[i]->Render();
     }
 
+    // Normal Mapped cube
     gD3DContext->VSSetShader(gNormalMapVertexShader, nullptr, 0);
     gD3DContext->PSSetShader(gNormalMapPixelShader, nullptr, 0);
 
@@ -587,6 +594,7 @@ void RenderSceneFromCamera(Camera* camera)
     gD3DContext->PSSetSamplers(0, 1, &gAnisotropic4xSampler);
     gNormalMapCube->Render();
 
+    // Parallax Mapped teapot
     gD3DContext->VSSetShader(gNormalMapVertexShader, nullptr, 0);
     gD3DContext->PSSetShader(gParallaxMapPixelShader, nullptr, 0);
     gD3DContext->PSSetShaderResources(2, 1, gPatternHeightTexture->GetTexture());
@@ -607,12 +615,14 @@ void RenderSceneFromCamera(Camera* camera)
     gD3DContext->PSSetSamplers(2, 1, &gPointSampler);
     gTroll->Render();
 
+    // Render sky box as a mesh
     gD3DContext->VSSetShader(gBasicTransformVertexShader, nullptr, 0);
     gD3DContext->PSSetShader(gLightModelPixelShader, nullptr, 0);
     gD3DContext->RSSetState(gCullNoneState);
     gD3DContext->PSSetShaderResources(0, 1, gSkyBoxTexture->GetTexture());
     gMySkyBox->Render();
 
+    // Render wigghle sphere
     gPerModelConstants.objectColour = { 1, 1, 0 };
     gSphere->SetPSShader(gTintPixelShader);
     gSphere->SetVSShader(gWiggleVertexShader);
@@ -743,7 +753,7 @@ void RenderScene(float frameTime)
     // Set up the light information in the constant buffer
     // Don't send to the GPU yet, the function RenderSceneFromCamera will do that
 
-    //Light 1 as spotlight
+    // Setup lights
     gPerFrameConstants.light1Colour           = gLight[0]->GetLightColour();
     gPerFrameConstants.light1Position         = gLight[0]->GetLightPosition();
     gPerFrameConstants.light1Facing           = gLight[0]->GetLightFacing();
@@ -784,16 +794,15 @@ void RenderScene(float frameTime)
     gPerFrameConstants.light5ProjectionMatrix = gLight[4]->GetLightProjectionMatrix();
     gPerFrameConstants.light5Type             = gLight[4]->GetLightType();
 
-    gPerFrameConstants.ambientColour    = gAmbientColour;
+    // Set other data to send to GPU
+    gPerFrameConstants.ambientColour    = gAmbientColour; 
     gPerFrameConstants.specularPower    = gSpecularPower;
     gPerFrameConstants.cameraPosition   = gCamera->Position();
     gPerFrameConstants.parallaxDepth    = gParallaxDepth;
     gPerFrameConstants.outlineColour    = OutlineColour;       
     gPerFrameConstants.outlineThickness = OutlineThickness;    
-
     gPerFrameConstants.viewportWidth = static_cast<float>(gViewportWidth);
     gPerFrameConstants.viewportHeight = static_cast<float>(gViewportHeight);
-
     gPerFrameConstants.frameTime = frameTime;
 
     // Select the shadow map texture as the current depth buffer. We will not be rendering any pixel colours
@@ -848,7 +857,6 @@ void RenderScene(float frameTime)
     // Render the scene from the main camera
     RenderSceneFromCamera(gCamera);
     
-
     // Unbind shadow maps
     ID3D11ShaderResourceView* nullView = nullptr;
     gD3DContext->PSSetShaderResources(1, 1, &nullView);
@@ -871,13 +879,14 @@ void RenderScene(float frameTime)
 // Update models and camera. frameTime is the time passed since the last frame
 void UpdateScene(float frameTime)
 {
-    
-    if (KeyHit(Key_1)) { gCurrentPostProcess = PostProcess::Tint;      canChangePostProcess = true; }
-    if (KeyHit(Key_2)) { gCurrentPostProcess = PostProcess::GreyNoise; canChangePostProcess = true; }
-    if (KeyHit(Key_3)) { gCurrentPostProcess = PostProcess::Burn;      canChangePostProcess = true; }
-    if (KeyHit(Key_4)) { gCurrentPostProcess = PostProcess::Distort;   canChangePostProcess = true; }
-    if (KeyHit(Key_0)) { gCurrentPostProcess = PostProcess::None;      canChangePostProcess = true; }
-    
+    // Change the post process effect on key pressing
+    if (KeyHit(Key_1)) gCurrentPostProcess = PostProcess::Tint;     
+    if (KeyHit(Key_2)) gCurrentPostProcess = PostProcess::GreyNoise;
+    if (KeyHit(Key_3)) gCurrentPostProcess = PostProcess::Burn;     
+    if (KeyHit(Key_4)) gCurrentPostProcess = PostProcess::Distort;  
+    if (KeyHit(Key_0)) gCurrentPostProcess = PostProcess::None;     
+
+    // Shows effect at the start
     timerTracker++;
     if (timerTracker == 1)
     {
@@ -892,7 +901,8 @@ void UpdateScene(float frameTime)
     {
         if (!canChangePostProcess)
         {
-            gCurrentPostProcess = PostProcess::None;
+            gCurrentPostProcess = PostProcess::None; // Sets to none once the effect is other
+            canChangePostProcess = true; // Sets to true so that the post process can be changed
         }
     }
 
@@ -909,7 +919,7 @@ void UpdateScene(float frameTime)
 
     gPerFrameConstants.wiggle += sin(gWiggle * 6);
 
-    for (int i = 0; i < NUM_LIGHTS; ++i)
+    for (int i = 0; i < NUM_LIGHTS; ++i) // Runs the effects on the lights if they have an effect
     {
         gLight[i]->UpdateScene(frameTime, gCharacters[0]->GetModel());
     }

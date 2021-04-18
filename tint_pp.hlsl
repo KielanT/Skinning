@@ -1,6 +1,7 @@
 #include "Common.hlsli"
 
-Texture2D SceneTexture : register(t0);
+// Post processing shader that tints (similar to the tint pixel shader)
+Texture2D SceneTexture : register(t0); // Uses the scene texture
 SamplerState PointSample : register(s0); 
 
 float4 main(PostProcessingInput input) : SV_Target
